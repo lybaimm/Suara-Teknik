@@ -1,0 +1,8 @@
+/private/vapid.php
+/private/vapid.json
+/vendor/
+/.runtime/
+/.env
+/.env.*
+*.log
+/akun-login.txt

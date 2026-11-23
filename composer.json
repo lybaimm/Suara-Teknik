@@ -1,0 +1,1 @@
+{"name":"suara-teknik/app","require":{"php":">=8.0","minishlink/web-push":"^8.0 || ^9.0 || ^10.0"}}
