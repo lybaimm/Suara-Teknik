@@ -33,7 +33,7 @@ menampilkan riwayat tindak lanjut agar prosesnya mudah dipantau.
 | 10 | Tanggapan admin | Kirim pembaruan privat kepada pelapor. |
 | 11 | Laporan Forum Advokasi | Tentukan jalur laporan, pilih periode, lalu catat hasil pembahasan fakultas. |
 | 12 | Notifikasi dalam website | Lihat notifikasi laporan dan tandai sudah dibaca. |
-| 13 | Agenda publik | Lihat tanggal, jam WIB, gedung, ruang, dan topik Forum Advokasi dari beranda. |
+| 13 | Kalender agenda publik | Kalender dengan blok warna status dan ringkasan forum per bulan. Daftar dibagi per halaman agar sejajar kalender; Lihat detail membuka jadwal, tempat, dan topik lengkap. |
 | 14 | Kelola Agenda | Admin menambah draf, menerbitkan, mengubah, membatalkan, dan menghapus agenda. |
 
 ## Teknologi dan struktur
@@ -143,6 +143,10 @@ koneksi database di `api/config.php` atau melalui variabel lingkungan.
   menampilkannya di beranda. Agenda mendatang yang dibatalkan diberi
   label **Dibatalkan**. Forum yang sudah lewat tetap dapat dikelola admin.
   Agenda nonforum dari versi sebelumnya tetap tersimpan di database.
+  Kalender bulanan juga menampilkan riwayat agenda yang pernah diterbitkan
+  atau dibatalkan. Draf tetap hanya dapat dilihat admin. Kategori waktu
+  mengikuti jadwal WIB dan diperbarui setiap menit; tanpa jam selesai,
+  kegiatan dianggap berlangsung sampai akhir tanggal tersebut.
 - Semua mahasiswa dapat melihat agenda dan datang langsung ke Forum
   Advokasi tanpa pendaftaran. Isi laporan pribadi disampaikan melalui
   **Tanggapan admin** pada detail laporan.

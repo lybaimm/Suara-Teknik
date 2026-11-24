@@ -13,8 +13,14 @@ let pendingType = '';
 let activeView = '';
 let homeRole;
 let screenAnimation;
+let homeNavFrame = 0;
+let homeNavTarget = null;
 
 history.scrollRestoration = 'manual';
+if (performance.getEntriesByType('navigation')[0]?.type === 'reload'
+    && homePages.includes(location.hash.slice(1))) {
+  history.replaceState(null, '', '#beranda');
+}
 
 function escapeHTML(value) {
   const entities = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
@@ -29,14 +35,23 @@ function go(path) {
 
 function scrollHome(page, navigating) {
   const behavior = navigating && !reducedMotion.matches ? 'smooth' : 'instant';
+  homeNavTarget = null;
   if (page === 'beranda') {
+    if (navigating) homeNavTarget = { page, top: 0, arrived: false };
     if (navigating) main.focus({ preventScroll: true });
     window.scrollTo({ top: 0, behavior });
+    queueHomeNavUpdate();
     return;
   }
   const section = document.getElementById(page);
+  if (navigating) {
+    const margin = parseFloat(getComputedStyle(section).scrollMarginTop) || 0;
+    const limit = Math.max(0, document.documentElement.scrollHeight - innerHeight);
+    homeNavTarget = { page, top: Math.max(0, Math.min(limit, section.getBoundingClientRect().top + scrollY - margin)), arrived: false };
+  }
   if (navigating) section.focus({ preventScroll: true });
   section.scrollIntoView({ behavior, block: 'start' });
+  queueHomeNavUpdate();
 }
 
 function setActiveNav(page) {
@@ -46,6 +61,43 @@ function setActiveNav(page) {
     if (active) link.setAttribute('aria-current', 'page');
     else link.removeAttribute('aria-current');
   }
+  syncNavIndicator();
+}
+
+function updateHomeNavFromScroll() {
+  homeNavFrame = 0;
+  if (activeView !== 'home' || !header.querySelector('nav a[href="#beranda"]')) return;
+  if (homeNavTarget) {
+    const distance = Math.abs(scrollY - homeNavTarget.top);
+    if (distance <= 2) homeNavTarget.arrived = true;
+    if (homeNavTarget.arrived && distance > 2) homeNavTarget = null;
+    else {
+      setActiveNav(homeNavTarget.page);
+      return;
+    }
+  }
+  const headerBottom = document.querySelector('.top').getBoundingClientRect().bottom;
+  // Short sections near the footer must become active while they are visible,
+  // before the page reaches its maximum scroll position.
+  const marker = headerBottom + (innerHeight - headerBottom) * .5;
+  let page = 'beranda';
+  for (const id of ['agenda-home', 'alur', 'tentang']) {
+    const section = document.getElementById(id);
+    if (section && section.getBoundingClientRect().top <= marker) page = id;
+  }
+  if (scrollY > 0 && document.documentElement.scrollHeight - (scrollY + innerHeight) <= 2) {
+    page = 'tentang';
+  }
+  setActiveNav(page);
+}
+
+function queueHomeNavUpdate() {
+  if (!homeNavFrame) homeNavFrame = requestAnimationFrame(updateHomeNavFromScroll);
+}
+
+function releaseHomeNavTarget() {
+  homeNavTarget = null;
+  queueHomeNavUpdate();
 }
 
 function afterLogin() {
@@ -330,6 +382,19 @@ async function start() {
   render();
   startNotificationPolling();
   window.addEventListener('hashchange', () => render({ navigating: true }));
+  window.addEventListener('scroll', queueHomeNavUpdate, { passive: true });
+  window.addEventListener('wheel', releaseHomeNavTarget, { passive: true });
+  window.addEventListener('touchmove', releaseHomeNavTarget, { passive: true });
+  window.addEventListener('keydown', event => {
+    if (['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' '].includes(event.key)) releaseHomeNavTarget();
+  });
+  window.addEventListener('resize', queueHomeNavUpdate);
+  window.addEventListener('resize', syncNavIndicator);
+  window.addEventListener('load', queueHomeNavUpdate);
+  document.fonts.ready.then(() => {
+    queueHomeNavUpdate();
+    syncNavIndicator();
+  });
 }
 
 start();

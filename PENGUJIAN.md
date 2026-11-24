@@ -1,5 +1,58 @@
 # Skenario pengujian Suara Teknik
 
+## Navigasi dan beranda terbaru — 24 November 2026
+
+Menu publik mengikuti urutan Beranda, Agenda, Cara Kerja, dan Tentang.
+Penanda aktif mengikuti scroll turun/naik tanpa melewati Cara Kerja pada
+viewport 390 × 844, 1366 × 768, 1366 × 900, dan 1920 × 1080.
+Garis desktop dan latar menu mobile bergeser halus; preferensi pengurangan
+gerak menonaktifkan animasinya. Klik menu, satu penanda aktif, dan riwayat
+browser diperiksa pada lebar 390 dan 1366 piksel.
+
+Refresh pada bagian halaman utama kembali ke Beranda. Tautan langsung ke
+bagian tertentu dan refresh halaman login tetap berfungsi. Teks beranda
+terbaru, judul dengan koma, serta penghapusan label tambahan juga diperiksa.
+Pemeriksaan mobile pada lebar 320, 390, dan 768 piksel memastikan tidak ada
+overflow horizontal, tanggal kalender tetap persegi, dan menu setinggi
+minimal 44 piksel. Dialog detail forum diperiksa pada lebar 390 piksel.
+Pemeriksaan menggunakan emulasi Chrome, bukan perangkat fisik.
+
+## Ringkasan agenda dan blok warna
+
+Tanggal yang memiliki forum memakai kotak warna penuh sesuai status.
+Daftar di samping kalender memiliki tinggi yang sama pada desktop dan
+dibatasi pada layar kecil. Maksimal empat forum ditampilkan per halaman
+desktop/tablet dan dua pada ponsel. Judul/topik diringkas dua baris;
+Lihat detail membuka dialog berisi judul, tanggal, jam, tempat, dan topik
+lengkap. Tombol Tutup atau Escape mengembalikan fokus ke pemicu dialog.
+
+Uji Chrome pada 320, 390, 768, dan 1366 piksel lulus untuk warna solid,
+teks panjang, dialog detail, penutupan dan pemulihan fokus, pagination
+seluruh 18 forum dummy, penyaringan tanggal, batas tinggi panel dan
+kesejajaran dengan kalender desktop. Tidak ada error JavaScript.
+
+## Kalender agenda di beranda
+
+Kalender bulanan serta tabel semua forum bulan terpilih tampil tanpa membuka
+halaman lain. Empat kategori memiliki warna dan jumlah masing-masing:
+mendatang (biru), berlangsung (kuning), selesai (hijau), dan dibatalkan
+(merah). Klik tanggal menyaring tabel; Tampilkan semua forum bulan ini
+menghapus filter tanggal tanpa berpindah bulan. Bulan ini kembali ke bulan
+berjalan. Kalender dapat membuka bulan sebelumnya untuk melihat riwayat.
+
+Uji Chrome pada lebar 320, 390, 768, dan 1366 piksel lulus untuk perpindahan
+bulan/tahun, Februari tahun kabisat, dua agenda pada satu tanggal, agenda
+dibatalkan, pengecualian draf, kondisi tanpa jadwal, fokus keyboard, dan
+overflow horizontal. Tidak ada error JavaScript. Data contoh hanya dipasang
+di browser pengujian dan tidak disimpan ke database.
+
+Tambahan uji kategori pada 320, 390, 768, 1024, dan 1366 piksel lulus untuk
+warna/jumlah, pemilihan tanggal, riwayat bulan lalu, status pada batas jam WIB,
+pembaruan otomatis setiap menit, fokus keyboard, jadwal tanpa jam selesai,
+kondisi kosong, dan tabel responsif. Uji PHP dalam transaksi memastikan forum
+terbit/dibatalkan yang sudah lewat tersedia bagi publik, sedangkan draf dan
+agenda nonforum tidak ikut terbuka; transaksi dibatalkan setelah pengujian.
+
 ## Verifikasi responsif pada versi final — 24 November 2026
 
 Perapian mobile diterapkan kembali dengan mempertahankan fitur Agenda versi

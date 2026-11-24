@@ -5,7 +5,8 @@ const FORUM_AGENDA = 'Forum Advokasi';
 
 function getAgenda(PDO $db, bool $admin): array
 {
-    $condition = "status IN ('published', 'cancelled') AND event_date >= CURDATE()";
+    // Published history is needed for the full monthly calendar; drafts stay private.
+    $condition = "status IN ('published', 'cancelled')";
     $filter = $admin ? '' : "AND $condition";
     $rows = runQuery($db, "
         SELECT id, title, type, event_date, start_time, end_time,

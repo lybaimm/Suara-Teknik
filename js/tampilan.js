@@ -20,8 +20,8 @@ const icon = {
 
 const homeLinks = [
   ['beranda', 'Beranda'],
-  ['alur', 'Cara Kerja'],
   ['agenda-home', 'Agenda'],
+  ['alur', 'Cara Kerja'],
   ['tentang', 'Tentang'],
 ];
 const memberLinks = [
@@ -59,11 +59,31 @@ function renderHeader(page) {
     <a class="brand" href="#beranda">
       <span class="mark">${icon.brand}</span>Suara Teknik
     </a>
-    <nav aria-label="Navigasi utama">${navigation}</nav>
+    <nav aria-label="Navigasi utama">${navigation}<span class="nav-indicator" aria-hidden="true" hidden></span></nav>
     <div class="account">${user ? notificationButton() : ''}${account}</div>`;
 
   header.querySelector('#logout')?.addEventListener('click', logoutAccount);
   header.querySelector('#bell')?.addEventListener('click', openNotifications);
+  requestAnimationFrame(syncNavIndicator);
+}
+
+function syncNavIndicator() {
+  const nav = header.querySelector('nav');
+  const indicator = nav?.querySelector('.nav-indicator');
+  const active = nav?.querySelector('a.active');
+  if (!indicator) return;
+  indicator.hidden = !active;
+  if (!active) return;
+  const bounds = nav.getBoundingClientRect();
+  const link = active.getBoundingClientRect();
+  const mobile = matchMedia('(max-width: 1000px)').matches;
+  indicator.style.width = `${link.width}px`;
+  indicator.style.height = `${mobile ? link.height : 2}px`;
+  indicator.style.transform = `translate(${link.left - bounds.left + nav.scrollLeft}px, ${link.top - bounds.top + (mobile ? 0 : link.height + 6)}px)`;
+  if (!indicator.classList.contains('ready')) {
+    indicator.getBoundingClientRect();
+    indicator.classList.add('ready');
+  }
 }
 
 function home() {
@@ -78,8 +98,7 @@ function home() {
     <div class="wrap">
       <section class="hero" aria-labelledby="hero-title">
         <div class="hero-copy">
-          <p class="eyebrow">Suara Teknik <span>Fakultas Teknik Unsoed</span></p>
-          <h1 id="hero-title">Suarakan ide.<br><span>Wujudkan</span><br>perubahan.</h1>
+          <h1 id="hero-title">Suarakan ide,<br><span>Wujudkan</span><br>perubahan.</h1>
           <p class="intro">
             Satu tempat untuk menyampaikan gagasan, melaporkan kendala,
             dan melihat bagaimana setiap suara ditindaklanjuti.
@@ -106,14 +125,13 @@ function home() {
       <section class="start" aria-labelledby="start-title">
         <div class="section-head">
           <h2 id="start-title">Apa yang ingin kamu sampaikan?</h2>
-          <p>Dua cara sederhana untuk membuat kampus lebih baik.</p>
         </div>
         <div class="choices">
           <a class="choice" href="#${start}/aspirasi">
             <span class="tile-icon">${icon.bubble}</span>
             <div>
               <h3>Aspirasi</h3>
-              <p>Punya gagasan? Kami ingin mendengarnya.</p>
+              <p>Punya gagasan? Kami siap mendengarnya.</p>
             </div>
             ${icon.diagonal}
           </a>
@@ -131,7 +149,6 @@ function home() {
     ${upcomingAgenda()}
     <section class="band" id="alur" tabindex="-1">
       <div class="wrap">
-        <p class="eyebrow">Cara kerja</p>
         <h2>Dari suara menjadi tindakan.</h2>
         <div class="steps">
           <div class="step">
@@ -154,7 +171,6 @@ function home() {
     </section>
     <section class="wrap about" id="tentang" tabindex="-1">
       <div>
-        <p class="eyebrow">Mengenal Suara Teknik</p>
         <h2>Tentang Suara Teknik</h2>
       </div>
       <p>
