@@ -1080,3 +1080,128 @@ dialog .btn {
 #notification-dialog{width:min(560px,calc(100% - 32px))}
 .notification-actions{margin:14px 0}.notification-item{display:grid;gap:5px;width:100%;text-align:left;padding:13px;border:0;border-bottom:1px solid var(--line);background:white;color:var(--ink);font:inherit;cursor:pointer}.notification-item.unread{background:#edf4ff}.notification-item small{color:var(--muted)}
 @media(max-width:670px){.extra-filters{grid-template-columns:1fr}.dashboard .stats,.dashboard.admin .stats{grid-template-columns:repeat(2,minmax(0,1fr))}.account{gap:6px}}
+
+/* Phone layouts: keep every navigation item visible and controls easy to tap. */
+@media (max-width:670px) {
+  .bar {
+    grid-template-columns: minmax(0,1fr) auto;
+    gap: 6px 8px;
+  }
+  .brand {
+    min-height: 44px;
+    gap: 8px;
+    font-size: 18px;
+  }
+  .account .btn.small {
+    min-height: 44px;
+    padding-inline: 12px;
+  }
+  .account .bell {
+    min-width: 44px;
+    padding-inline: 10px;
+  }
+  .bar nav {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0,1fr);
+    gap: 4px;
+    min-width: 0;
+    overflow: visible;
+    padding: 0;
+  }
+  .bar nav a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+    min-height: 44px;
+    padding: 7px 4px;
+    border-radius: 7px;
+    font-size: 13px;
+    line-height: 1.35;
+    text-align: center;
+    white-space: normal;
+    text-decoration: none;
+  }
+  .bar nav a.active {
+    background: var(--sky);
+    color: var(--blue);
+  }
+  #alur,#tentang {
+    scroll-margin-top: 142px;
+  }
+  input,select,textarea {
+    min-width: 0;
+    font-size: 16px;
+  }
+  .form-grid>*,.filters>*,.detail-grid>* {
+    min-width: 0;
+  }
+  .actions .text-link,.back,.foot a,.report-panel .section-head .text-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+  .report-panel .section-head {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 12px;
+  }
+  .report-list a {
+    grid-template-columns: minmax(0,1fr);
+    justify-items: start;
+    gap: 10px;
+    padding: 18px 0;
+  }
+  .report-list .badge {
+    max-width: 100%;
+    width: fit-content;
+  }
+  #auth-form .actions,#report-form .actions {
+    display: grid;
+    grid-template-columns: minmax(0,1fr);
+    gap: 8px;
+  }
+  #auth-form .actions>*,#report-form .actions>* {
+    justify-content: center;
+  }
+  #admin-form>.btn {
+    width: 100%;
+  }
+  .eyebrow {
+    flex-wrap: wrap;
+    gap: 6px 8px;
+    line-height: 1.6;
+  }
+  .eyebrow:before {
+    flex: none;
+  }
+  .eyebrow span {
+    flex-basis: 100%;
+    padding-left: 26px;
+  }
+  .detail-copy,.notification-item,.method-info {
+    overflow-wrap: anywhere;
+  }
+  dialog {
+    max-height: calc(100dvh - 32px);
+  }
+}
+
+@media (max-width:360px) {
+  .brand {
+    font-size: 16px;
+  }
+  .mark {
+    width: 32px;
+    height: 32px;
+  }
+  .bar nav a {
+    font-size: 12px;
+  }
+  .report-panel .section-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

@@ -1,5 +1,20 @@
 # Skenario pengujian Suara Teknik
 
+## Pemeriksaan tampilan mobile 24 November 2026
+
+Emulasi Chrome memeriksa 12 halaman publik/mahasiswa/admin pada lebar 320,
+360, 390, 430, 768, dan 1366 piksel (72 kombinasi). Tidak ditemukan overflow
+horizontal atau error JavaScript. Pada lebar ponsel, menu admin tampil lengkap,
+kontrol formulir memakai teks 16 px, dan tautan/tombol yang diperiksa pada header
+dan area aksi memiliki tinggi minimal 44 px. Judul dan status kartu laporan
+ditata vertikal agar teks tidak menyempit pada layar kecil.
+
+Pengujian sentuh pada 320 dan 390 piksel mencakup login/logout kedua peran,
+navigasi header, pencarian/detail laporan, formulir dan batal edit mahasiswa,
+pilihan penanganan langsung/forum admin, serta buka/tutup dialog notifikasi.
+Perubahan ini hanya menyentuh CSS; laporan aktif tidak diubah dalam pengujian.
+Pemeriksaan menggunakan emulasi browser, belum perangkat Android/iPhone fisik.
+
 ## Hasil pengujian lokal 23 November 2026
 
 Pengujian interaksi dijalankan dengan Chrome melalui Playwright, PHP 8.0.30,
