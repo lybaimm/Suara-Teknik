@@ -1,5 +1,26 @@
 # Skenario pengujian Suara Teknik
 
+## Verifikasi responsif pada versi final — 24 November 2026
+
+Perapian mobile diterapkan kembali dengan mempertahankan fitur Agenda versi
+final. Header menampilkan semua menu tanpa geser horizontal, termasuk empat
+menu admin dan tombol Daftar/Masuk. Kontrol header memiliki tinggi minimal
+44 px, navigasi 48 px, dan isian formulir ponsel memakai teks 16 px.
+Kartu laporan menempatkan status di bawah isi, serta formulir laporan, akun,
+dan Agenda menata tombol secara vertikal pada layar kecil.
+
+Chrome melalui Playwright memeriksa 17 halaman publik/mahasiswa/admin pada
+lebar 320, 360, 390, 430, 670, 768, 900, 1024, dan 1366 piksel, total
+153 kombinasi. Seluruhnya lulus tanpa overflow horizontal pada dokumen/menu
+atau error JavaScript. Tautan navigasi dicoba untuk setiap peran dan ukuran.
+Pada 320 dan 390 piksel turut dicoba dialog notifikasi, pilihan metode
+langsung/forum pada formulir tindak lanjut, serta logout.
+
+Agenda contoh untuk memeriksa judul/lokasi panjang dan formulir edit hanya
+dipasang dalam respons API di browser pengujian; tidak disimpan ke database.
+Tangkapan mobile memakai kepadatan 3x. Pengujian ini memakai emulasi Chrome,
+belum perangkat Android atau iPhone fisik.
+
 ## Hasil verifikasi versi final
 
 Uji API berjalan dengan PHP 8.4.27 dan MariaDB 11.8.9 pada database uji
