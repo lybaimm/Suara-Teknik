@@ -261,7 +261,6 @@ h1,h2,h3 {
 }
 
 .hero figure {
-  position: relative;
   min-width: 0;
   margin: 0;
 }
@@ -280,7 +279,7 @@ h1,h2,h3 {
 .photo-tag {
   position: absolute;
   right: 14px;
-  bottom: 40px;
+  bottom: 14px;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -290,7 +289,13 @@ h1,h2,h3 {
   color: var(--ink);
   font-size: 12px;
   font-weight: 650;
+  text-decoration: none;
   box-shadow: 0 2px 12px #14294622;
+}
+
+.photo-tag:hover {
+  background: #edf4ff;
+  text-decoration: underline;
 }
 
 .photo-tag svg {
@@ -299,7 +304,7 @@ h1,h2,h3 {
 }
 
 .hero figcaption {
-  margin-top: 10px;
+  margin-top: 24px;
   font-size: 12px;
   color: var(--muted);
 }
@@ -834,7 +839,11 @@ dialog .btn {
   display: none!important;
 }
 
-.hero figure::before {
+.hero-photo-frame {
+  position: relative;
+}
+
+.hero-photo-frame::before {
   content: "";
   position: absolute;
   inset: 12px -13px -12px 16px;
@@ -847,10 +856,6 @@ dialog .btn {
   border: 3px solid white;
   border-radius: 16px;
   box-shadow: 0 8px 24px #14294622;
-}
-
-.hero figcaption {
-  position: relative;
 }
 
 .hero .btn.primary,.mark {
@@ -1205,7 +1210,7 @@ dialog .btn {
     min-width: 0;
   }
 
-  .actions .text-link, .back, .foot a, .section-head .text-link {
+  .actions .text-link, .back, .foot a, .section-head .text-link, .photo-tag {
     display: inline-flex;
     align-items: center;
     min-height: 44px;

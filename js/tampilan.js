@@ -67,6 +67,10 @@ function renderHeader(page) {
 }
 
 function home() {
+  const facultyMap = 'https://www.google.com/maps/place/' +
+    'Fakultas+Teknik+Universitas+Jenderal+Soedirman/@-7.4287217,109.3337591,17z/' +
+    'data=!3m1!4b1!4m6!3m5!1s0x2e6559814ade5b79:0xaef1b7bab5cba0f0' +
+    '!8m2!3d-7.428727!4d109.336334!16s%2Fg%2F1pzq_62b0';
   const admin = user?.role === 'admin';
   const start = user ? (admin ? 'kelola' : 'buat') : 'masuk';
   const action = button(start, admin ? 'Lihat laporan' : 'Buat laporan', 'primary', true);
@@ -86,11 +90,17 @@ function home() {
           </div>
         </div>
         <figure>
-          <img class="hero-photo" src="assets/fakultas-teknik.webp"
-            alt="Tampak depan gedung Fakultas Teknik Universitas Jenderal Soedirman"
-            width="1500" height="975" fetchpriority="high">
-          <div class="photo-tag">${icon.pin} Fakultas Teknik</div>
-          <figcaption>Universitas Jenderal Soedirman</figcaption>
+          <div class="hero-photo-frame">
+            <img class="hero-photo" src="assets/fakultas-teknik.webp"
+              alt="Tampak depan gedung Fakultas Teknik Universitas Jenderal Soedirman"
+              width="1500" height="975" fetchpriority="high">
+            <a class="photo-tag" href="${facultyMap}"
+              target="_blank" rel="noopener noreferrer"
+              aria-label="Buka lokasi Fakultas Teknik di Google Maps (tab baru)">
+              ${icon.pin} Fakultas Teknik
+            </a>
+          </div>
+          <figcaption>Fakultas Teknik, Universitas Jenderal Soedirman</figcaption>
         </figure>
       </section>
       <section class="start" aria-labelledby="start-title">
