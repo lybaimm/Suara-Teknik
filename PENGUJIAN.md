@@ -1,5 +1,14 @@
 # Skenario pengujian Suara Teknik
 
+## Fade in dan fokus kolom akun
+
+Fade in diperiksa pada 16 halaman publik, mahasiswa, dan admin untuk
+masing-masing lebar 390 dan 1366 piksel tanpa error JavaScript. Bagian
+beranda muncul sekali saat pertama terlihat dan tidak mengulang animasi
+saat scroll kembali. Preferensi pengurangan gerak menonaktifkan fade in.
+Kolom Masuk dan Daftar diperiksa dengan klik dan keyboard pada kedua
+ukuran; garis fokus mengikuti tepi bagian dalam kolom tanpa jarak di luar.
+
 ## Navigasi dan beranda terbaru — 24 November 2026
 
 Menu publik mengikuti urutan Beranda, Agenda, Cara Kerja, dan Tentang.

@@ -15,6 +15,8 @@ let homeRole;
 let screenAnimation;
 let homeNavFrame = 0;
 let homeNavTarget = null;
+let homeRevealObserver;
+const revealedHomeSections = new Set();
 
 history.scrollRestoration = 'manual';
 if (performance.getEntriesByType('navigation')[0]?.type === 'reload'
@@ -98,6 +100,30 @@ function queueHomeNavUpdate() {
 function releaseHomeNavTarget() {
   homeNavTarget = null;
   queueHomeNavUpdate();
+}
+
+function revealHomeSections() {
+  homeRevealObserver?.disconnect();
+  if (reducedMotion.matches || !('IntersectionObserver' in window)) return;
+
+  homeRevealObserver = new IntersectionObserver(entries => {
+    for (const entry of entries) {
+      if (!entry.isIntersecting) continue;
+      const section = entry.target;
+      homeRevealObserver.unobserve(section);
+      const key = section.id || section.className;
+      if (revealedHomeSections.has(key)) continue;
+      revealedHomeSections.add(key);
+      section.animate([{ opacity: 0 }, { opacity: 1 }], {
+        duration: 650,
+        easing: 'cubic-bezier(.2,.65,.35,1)',
+      });
+    }
+  }, { rootMargin: '0px 0px -24px 0px', threshold: 0 });
+
+  for (const section of main.querySelectorAll('.hero, .start, #agenda-home, #alur, #tentang')) {
+    homeRevealObserver.observe(section);
+  }
 }
 
 function afterLogin() {
@@ -341,20 +367,21 @@ function render({ navigating = false } = {}) {
   if (page === 'buat' || page === 'edit') wireReport(report);
 
   screenAnimation?.cancel();
+  homeRevealObserver?.disconnect();
   if (onHome) {
     scrollHome(page, navigating);
+    revealHomeSections();
   } else if (changedView) {
     window.scrollTo({ top: 0, behavior: 'instant' });
     if (navigating) main.focus({ preventScroll: true });
   }
-  if (navigating && changedView && !reducedMotion.matches &&
-      !['alur', 'tentang', 'agenda-home'].includes(page)) {
+  if (!onHome && changedView && !reducedMotion.matches) {
     screenAnimation = main.firstElementChild.animate(
       [
-        { opacity: .72, transform: 'translateY(5px)' },
-        { opacity: 1, transform: 'translateY(0)' },
+        { opacity: 0 },
+        { opacity: 1 },
       ],
-      { duration: 210, easing: 'cubic-bezier(.2,.65,.35,1)' }
+      { duration: 500, easing: 'cubic-bezier(.2,.65,.35,1)' }
     );
   }
 }
@@ -379,6 +406,9 @@ async function start() {
     showError('app-error', error.message);
   }
   render();
+  if (!reducedMotion.matches) {
+    header.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 500, easing: 'ease-out' });
+  }
   startNotificationPolling();
   window.addEventListener('hashchange', () => render({ navigating: true }));
   window.addEventListener('scroll', queueHomeNavUpdate, { passive: true });

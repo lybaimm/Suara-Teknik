@@ -55,6 +55,12 @@ button {
   outline-offset: 4px;
 }
 
+#auth-form input:focus {
+  border-color: #245fbd;
+  outline: 2px solid #245fbd;
+  outline-offset: -2px;
+}
+
 .wrap {
   width: min(1160px, calc(100% - 96px));
   margin-inline: auto;
