@@ -132,7 +132,6 @@ function sendState(PDO $db, ?array $user, array $extra = []): void
         'events' => getAgenda($db, ($user['role'] ?? '') === 'admin'),
         'csrf' => $_SESSION['csrf'],
         'notifications' => $user ? getNotifications($db, $user['id']) : [],
-        'pushKey' => $user ? pushPublicKey() : '',
     ];
 
     output(array_merge($state, $extra));
@@ -195,7 +194,6 @@ try {
         sendState($db, loginAccount($db, $input));
     }
     if ($action === 'logout') {
-        if ($user && !empty($input['endpoint']) && is_string($input['endpoint'])) runQuery($db, 'DELETE FROM push_subscriptions WHERE user_id=? AND endpoint_hash=?', [$user['id'],hash('sha256',$input['endpoint'])]);
         unset($_SESSION['user_id']);
         session_regenerate_id(true);
         $_SESSION['csrf'] = bin2hex(random_bytes(32));
@@ -211,10 +209,6 @@ try {
             if (!$notificationId) fail(422, 'Nomor notifikasi tidak valid.');
             runQuery($db, 'UPDATE notifications SET is_read=1 WHERE user_id=? AND id=?', [$user['id'],$notificationId]);
         } else runQuery($db, 'UPDATE notifications SET is_read=1 WHERE user_id=?', [$user['id']]);
-        sendState($db, $user);
-    }
-    if ($action === 'push-subscribe' || $action === 'push-unsubscribe') {
-        manageSubscription($db, $user, $input, $action);
         sendState($db, $user);
     }
     $db->beginTransaction();
@@ -239,7 +233,6 @@ try {
         fail(403, 'Tindakan ini tidak tersedia untuk akunmu.');
     }
     $db->commit();
-    deliverPush($db);
     sendState($db, $user, $extra);
 } catch (Throwable $error) {
     if (isset($db) && $db->inTransaction()) {

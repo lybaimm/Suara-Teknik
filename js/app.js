@@ -106,7 +106,6 @@ function afterLogin() {
     : 'dashboard';
   pendingType = '';
   go(page);
-  offerPush();
 }
 
 function showError(id, message) {

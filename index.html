@@ -4,8 +4,10 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f5f7fb">
-  <meta name="description"
-    content="Suara Teknik, ruang aspirasi dan pengaduan mahasiswa Fakultas Teknik Unsoed.">
+  <meta
+    name="description"
+    content="Suara Teknik, ruang aspirasi dan pengaduan mahasiswa Fakultas Teknik Unsoed."
+  >
   <title>Suara Teknik — Ruang Aspirasi Mahasiswa</title>
   <link rel="stylesheet" href="css/style.css">
   <script defer src="js/data.js"></script>
@@ -17,20 +19,29 @@
 </head>
 <body>
   <a class="skip btn" href="#main">Langsung ke konten</a>
+
   <header class="top">
     <div class="bar wrap" id="header"></div>
   </header>
+
   <p class="wrap alert" id="app-error" role="alert" hidden></p>
   <main id="main" tabindex="-1"></main>
 
   <footer>
     <div class="wrap foot">
-      <span><strong>Suara Teknik</strong> · Ruang Aspirasi Mahasiswa Fakultas Teknik Unsoed</span>
+      <span>
+        <strong>Suara Teknik</strong>
+        · Ruang Aspirasi Mahasiswa Fakultas Teknik Unsoed
+      </span>
       <a href="#tentang">Tentang Kami</a>
     </div>
   </footer>
-  <dialog id="confirm" aria-labelledby="confirm-title"
-    aria-describedby="confirm-description">
+
+  <dialog
+    id="confirm"
+    aria-labelledby="confirm-title"
+    aria-describedby="confirm-description"
+  >
     <h3 id="confirm-title">Hapus laporan ini?</h3>
     <p id="confirm-description">Laporan ini akan dihapus.</p>
     <form method="dialog" class="actions">
@@ -38,11 +49,37 @@
       <button class="btn primary" value="hapus">Hapus laporan</button>
     </form>
   </dialog>
-  <dialog id="success-dialog" aria-labelledby="success-title"><div class="success-symbol" aria-hidden="true">✓</div><h3 id="success-title">Berhasil!</h3><p id="success-text"></p><form method="dialog"><button class="btn primary" autofocus>OK</button></form></dialog>
-  <dialog id="notification-dialog" aria-labelledby="notification-title"><div class="section-head"><h3 id="notification-title">Notifikasi</h3><form method="dialog"><button class="btn quiet small" aria-label="Tutup">Tutup</button></form></div><div id="notification-content"></div></dialog>
-  <dialog id="push-dialog" aria-labelledby="push-title"><h3 id="push-title">Aktifkan notifikasi</h3><p>Dapatkan pembaruan laporan meskipun tab website tidak terbuka.</p><div class="actions"><button id="push-activate" class="btn primary">Aktifkan notifikasi</button><form method="dialog"><button class="btn quiet">Nanti saja</button></form></div><p id="push-error" role="status"></p></dialog>
+
+  <dialog id="success-dialog" aria-labelledby="success-title">
+    <div class="success-symbol" aria-hidden="true">✓</div>
+    <h3 id="success-title">Berhasil!</h3>
+    <p id="success-text"></p>
+    <form method="dialog">
+      <button class="btn primary" autofocus>OK</button>
+    </form>
+  </dialog>
+
+  <dialog id="notification-dialog" aria-labelledby="notification-title">
+    <div class="section-head">
+      <h3 id="notification-title">Notifikasi</h3>
+      <form method="dialog">
+        <button class="btn quiet small" aria-label="Tutup">Tutup</button>
+      </form>
+    </div>
+    <div id="notification-content"></div>
+  </dialog>
+
   <dialog id="agenda-detail-dialog" aria-labelledby="agenda-detail-title">
-    <div class="agenda-detail-heading"><h3 id="agenda-detail-title"></h3><form method="dialog"><button class="btn quiet small" aria-label="Tutup detail forum" autofocus>Tutup</button></form></div>
+    <div class="agenda-detail-heading">
+      <h3 id="agenda-detail-title"></h3>
+      <form method="dialog">
+        <button
+          class="btn quiet small"
+          aria-label="Tutup detail forum"
+          autofocus
+        >Tutup</button>
+      </form>
+    </div>
     <div id="agenda-detail-content"></div>
   </dialog>
 </body>

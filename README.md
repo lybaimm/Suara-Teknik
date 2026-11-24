@@ -151,23 +151,22 @@ koneksi database di `api/config.php` atau melalui variabel lingkungan.
   Advokasi tanpa pendaftaran. Isi laporan pribadi disampaikan melalui
   **Tanggapan admin** pada detail laporan.
 
-### Mengaktifkan Web Push (opsional, tetapi diperlukan untuk demo push browser)
+### Notifikasi laporan
 
-Fitur inti tidak memerlukan Composer. Web Push sungguhan membutuhkan koneksi internet, izin pengguna, browser yang mendukung Push API, PHP dengan `curl`, `mbstring`, `openssl` serta ekstensi yang diminta Composer (misalnya `gmp` atau `bcmath` tergantung versi), library Minishlink, dan kunci VAPID. Jangan menonaktifkan verifikasi TLS. Localhost adalah secure context untuk tes; hosting harus HTTPS. PHP Web Push versi lama untuk PHP 8.0/8.1 tidak lagi dipelihara; untuk penggunaan publik gunakan PHP 8.2+ dan library yang masih didukung.
+Mahasiswa bisa membuka lonceng untuk melihat perubahan status, tanggapan,
+dan penyelesaian laporannya. Admin menerima notifikasi saat laporan masuk,
+diperbarui, atau dihapus oleh pelapor. Daftar diperbarui saat dibuka dan
+dicek otomatis setiap 15 detik selama tab aktif.
 
-1. Instal Composer dari https://getcomposer.org/download/ dan arahkan ke `D:\xampp\php\php.exe`. Periksa `php -v` serta `php -m` di terminal. Aktifkan ekstensi yang kurang pada php.ini jika diminta Composer dan restart Apache.
-2. Buka terminal di folder project (CMD Windows):
+### Deploy ke server publik
 
-   ```bat
-   cd /d D:\xampp\htdocs\Suara_Teknik
-   composer install
-   D:\xampp\php\php.exe scripts\setup-push.php email-admin@example.com
-   ```
-
-   Ganti email contoh dengan email kontak admin yang valid. Skrip menghasilkan `private/vapid.php` berisi kunci unik server. Jangan unggah file ini ke repo publik; `.gitignore` sudah mengecualikannya. Folder `vendor/` dihasilkan Composer dan tidak perlu masuk repo. Jangan mengganti kunci saat langganan masih aktif.
-3. Refresh website. Login, klik **Aktifkan notifikasi** pada dialog atau melalui lonceng → Pengaturan push. Pilih Allow/Izinkan pada prompt browser.
-4. Uji memakai **dua profil Chrome berbeda**, satu mahasiswa dan satu admin. Jangan logout dari akun penerima sebelum tes: logout mencabut langganan browser ini untuk menjaga privasi. Tab penerima boleh ditutup; browser/OS harus mendukung pengiriman latar belakang. Kirim laporan dari mahasiswa, lalu balas dari admin. Klik push untuk membuka laporan melalui Service Worker.
-5. Jika push tidak diterima, tetap periksa lonceng, izin browser, koneksi internet, dan log PHP. Push merupakan pengiriman best-effort setelah transaksi tersimpan; kegagalan push tidak membatalkan laporan. Tidak ada retry/antrean persisten di versi praktikum ini. Push menggunakan pesan umum agar isi pengaduan tidak tampil di lock screen. Endpoint dibatasi pada layanan push browser yang dikenal; browser lain bisa tidak didukung.
+Gunakan HTTPS dan isi konfigurasi database lewat variabel lingkungan.
+Gunakan akun database khusus aplikasi dengan hak akses seperlunya.
+Lindungi direktori database, private, dan scripts dari akses HTTP.
+Jika server mengabaikan .htaccess, atur pemblokiran lewat konfigurasi
+hosting. Saat mengimpor SQL untuk produksi, lewati blok akun pengujian
+lokal di bagian akhir. Jika akun tersebut sudah pernah dipakai di server,
+ganti kata sandinya sebelum membuka akses publik.
 
 ## Checklist pengujian manual
 

@@ -8,7 +8,6 @@ function svg(path) {
 }
 
 const icon = {
-  brand: svg('<path d="M4 12h2l2-5 3 10 3-12 2 7h4"/>'),
   arrow: svg('<path d="M4 12h15m-6-6 6 6-6 6"/>'),
   diagonal: svg('<path d="M6 18 18 6M8 6h10v10"/>'),
   bubble: svg('<path d="M4 5h16v12H9l-5 4zM8 9h8m-8 4h5"/>'),
@@ -57,7 +56,10 @@ function renderHeader(page) {
 
   header.innerHTML = `
     <a class="brand" href="#beranda">
-      <span class="mark">${icon.brand}</span>Suara Teknik
+      <span class="mark">
+        <img src="assets/logo-suara-teknik.png" alt="" width="755" height="494">
+      </span>
+      Suara Teknik
     </a>
     <nav aria-label="Navigasi utama">${navigation}<span class="nav-indicator" aria-hidden="true" hidden></span></nav>
     <div class="account">${user ? notificationButton() : ''}${account}</div>`;

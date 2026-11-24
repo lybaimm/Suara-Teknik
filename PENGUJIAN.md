@@ -87,11 +87,15 @@ langsung dan forum, tanggapan privat, serta notifikasi dalam website.
 Chromium pada viewport 390 × 844 juga memeriksa hero, header, opsi
 scroll halus, agenda tanpa login, pengelolaan agenda, dialog konfirmasi,
 kontrol status admin, dan login mahasiswa. Sintaks PHP dan JavaScript
-diperiksa. Apache XAMPP dan pengiriman Web Push sungguhan belum diuji.
+diperiksa. Apache XAMPP belum diuji.
 
 Versi tanpa akun demo diuji dengan database kosong melalui skrip impor.
 Uji Chromium mencakup tombol Daftar dan Masuk pada lebar 320 piksel,
 registrasi, login mahasiswa dan admin, serta publikasi khusus Forum Advokasi.
+
+Versi logo header dan notifikasi lonceng diuji di Chromium, PHP, dan MariaDB.
+Pengujian mencakup logo desktop dan ponsel, laporan baru, perubahan status,
+laporan selesai, pembukaan detail, dan penandaan notifikasi sudah dibaca.
 
 ## Skenario uji manual
 
@@ -115,10 +119,7 @@ Gunakan akun dan database uji untuk mengikuti skenario berikut.
 | 14 | Klik lonceng, klik notifikasi dan tandai semua dibaca | Laporan terkait dibuka, jumlah belum dibaca turun, persist setelah refresh. |
 | 15 | Akun mahasiswa berbeda membuka ID laporan milik orang lain | Tidak dapat mengakses detail/API foto milik akun lain. |
 | 16 | Upgrade database lama | Akun dan laporan lama tetap ada; tabel/kolom baru tersedia. |
-| 17 | Aktifkan push pada dua profil browser, kirim dan balas laporan | Jika konfigurasi benar, kedua profil menerima push masing-masing; klik membuka detail. |
-| 18 | Tolak izin push atau putus koneksi layanan push | Fungsi inti tetap berjalan; notifikasi tersimpan di lonceng. |
-| 19 | Logout atau nonaktifkan push | Langganan perangkat tersebut dicabut. |
-| 20 | Admin membuat draf, menerbitkan, mengubah, dan membatalkan agenda | Pengunjung melihat agenda terbaru yang terbit dan keterangan pembatalan. |
-| 21 | Pengunjung membuka agenda dari beranda | Jadwal, gedung, ruang dan pokok bahasan bisa dibaca tanpa masuk. |
-| 22 | Registrasi ulang dengan NIM sama, huruf berbeda dan email baru | Database tetap menyimpan satu akun untuk NIM tersebut. |
-| 23 | Admin menyelesaikan laporan langsung dari status awal | Status berubah setelah admin mengisi penjelasan. |
+| 17 | Admin membuat draf, menerbitkan, mengubah, dan membatalkan agenda | Pengunjung melihat agenda terbaru yang terbit dan keterangan pembatalan. |
+| 18 | Pengunjung membuka agenda dari beranda | Jadwal, gedung, ruang dan pokok bahasan bisa dibaca tanpa masuk. |
+| 19 | Registrasi ulang dengan NIM sama, huruf berbeda dan email baru | Database tetap menyimpan satu akun untuk NIM tersebut. |
+| 20 | Admin menyelesaikan laporan langsung dari status awal | Status berubah setelah admin mengisi penjelasan. |

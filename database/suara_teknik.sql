@@ -61,12 +61,6 @@ CREATE TABLE IF NOT EXISTS notifications (
  is_read TINYINT(1) NOT NULL DEFAULT 0, created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
  FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE, INDEX(user_id,is_read,id)
 ) ENGINE=InnoDB;
-CREATE TABLE IF NOT EXISTS push_subscriptions (
- id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY, user_id INT UNSIGNED NOT NULL,
- endpoint_hash CHAR(64) NOT NULL UNIQUE, endpoint TEXT NOT NULL, p256dh VARCHAR(120) NOT NULL, auth VARCHAR(64) NOT NULL,
- FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE, INDEX(user_id)
-) ENGINE=InnoDB;
-
 CREATE TABLE IF NOT EXISTS events (
   id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   title VARCHAR(150) NOT NULL,
@@ -94,3 +88,23 @@ SET @q = IF(
 PREPARE stmt FROM @q;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
+
+-- Akun untuk pengujian lokal. Jangan impor blok ini ke server publik.
+-- Impor ulang mengatur kembali kata sandi dan peran kedua alamat email ini.
+-- NIM dan nama akun lama dipertahankan.
+
+START TRANSACTION;
+
+INSERT INTO users (name, email, password_hash, role)
+VALUES ('Mahasiswa', 'mahasiswa@gmail.com', '$2y$12$gW.6ADrwxwqe/A.obwsWX.kGDsYeM./81TMuTRV29dADzSgaMXM8.', 'mahasiswa')
+ON DUPLICATE KEY UPDATE
+  password_hash = VALUES(password_hash),
+  role = 'mahasiswa';
+
+INSERT INTO users (name, email, password_hash, role)
+VALUES ('Admin', 'admin@gmail.com', '$2y$12$ZjqFznsIgir4VvrRLaxYH.xIwyrR64qllkS9kcPHj5JXIu3IcuMFm', 'admin')
+ON DUPLICATE KEY UPDATE
+  password_hash = VALUES(password_hash),
+  role = 'admin';
+
+COMMIT;
