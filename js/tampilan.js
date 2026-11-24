@@ -21,16 +21,19 @@ const icon = {
 const homeLinks = [
   ['beranda', 'Beranda'],
   ['alur', 'Cara Kerja'],
+  ['agenda-home', 'Agenda'],
   ['tentang', 'Tentang'],
 ];
 const memberLinks = [
   ['dashboard', 'Ringkasan'],
   ['riwayat', 'Riwayat Laporan'],
+  ['agenda', 'Agenda'],
 ];
 const adminLinks = [
   ['dashboard', 'Ringkasan'],
   ['kelola', 'Manajemen Laporan'],
   ['forum', 'Forum Advokasi'],
+  ['agenda-admin', 'Kelola Agenda'],
 ];
 
 function button(href, label, style = '', arrow = false) {
@@ -41,14 +44,16 @@ function renderHeader(page) {
   const admin = user?.role === 'admin';
   const links = user ? (admin ? adminLinks : memberLinks) : homeLinks;
   const reportPage = page === 'laporan' || page === 'edit';
-  const activePage = reportPage ? (admin ? 'kelola' : 'riwayat') : page;
+  let activePage = reportPage ? (admin ? 'kelola' : 'riwayat') : page;
+  if (page === 'agenda-baru' || page === 'agenda-edit') activePage = 'agenda-admin';
+  if (page === 'agenda' && !user) activePage = 'agenda-home';
   const navigation = links.map(([href, name]) => {
     const active = activePage === href ? 'class="active" aria-current="page"' : '';
     return `<a href="#${href}" ${active}>${name}</a>`;
   }).join('');
   const account = user
     ? '<button type="button" class="btn quiet small" id="logout">Keluar</button>'
-    : button('masuk', 'Masuk', 'quiet small', true);
+    : button('daftar', 'Daftar', 'quiet small') + button('masuk', 'Masuk', 'primary small');
 
   header.innerHTML = `
     <a class="brand" href="#beranda">
@@ -113,6 +118,7 @@ function home() {
         </div>
       </section>
     </div>
+    ${upcomingAgenda()}
     <section class="band" id="alur" tabindex="-1">
       <div class="wrap">
         <p class="eyebrow">Cara kerja</p>
@@ -176,7 +182,7 @@ function auth(register) {
   const title = register ? 'Daftar akun' : 'Masuk ke Suara Teknik';
   const description = register
     ? 'Buat akun untuk menyampaikan aspirasi dan pengaduan.'
-    : 'Masuk dengan email dan kata sandi akunmu.';
+    : 'Mahasiswa masuk dengan NIM. Admin dan akun lama tanpa NIM masuk dengan email.';
   const nextPage = (register ? 'masuk' : 'daftar') + (pendingType ? '/' + pendingType : '');
   const accountFields = register ? `
     <div class="form-grid">
@@ -191,10 +197,11 @@ function auth(register) {
     <div class="panel">
       <form id="auth-form">
         ${accountFields}
-        <label>Email
-          <input name="email" type="email" required
-            maxlength="100" placeholder="contoh@example.com">
-        </label>
+        ${register ? `<label>Email
+          <input name="email" type="email" required maxlength="100" autocomplete="email">
+        </label>` : `<label>NIM atau email
+          <input name="identifier" required maxlength="100" autocomplete="username">
+        </label>`}
         <label>Kata sandi
           <input name="password" type="password" required
             minlength="6" placeholder="Minimal 6 karakter">
@@ -245,10 +252,9 @@ function listing(data) {
 function dashboard() {
   const admin = user.role === 'admin';
   const data = visibleReports();
-  const shownStatuses = admin ? statuses : [statuses[0], statuses[2], statuses[5], statuses[3]];
   const counts = [
     ['Total laporan', data.length],
-    ...shownStatuses.map(status => [
+    ...statuses.map(status => [
       status, data.filter(report => report.status === status).length,
     ]),
   ];
@@ -267,7 +273,7 @@ function dashboard() {
 
   return screen(title, description, `
     <div class="stats">${summary}</div>
-    <section class="panel forum-info"><h2>Forum Advokasi</h2><p>Forum bersama pihak fakultas dilaksanakan dua kali dalam satu tahun. Periode dan informasi jadwal laporannya dapat dilihat pada tanggapan admin.</p>${admin ? button('forum','Lihat agenda forum','quiet') : button('riwayat','Pantau aspirasi saya','quiet')}</section>
+    <section class="panel forum-info"><h2>Forum Advokasi</h2><p>Forum bersama pihak fakultas dilaksanakan dua kali dalam satu tahun. Periode dan informasi jadwal laporannya dapat dilihat pada tanggapan admin.</p>${admin ? button('forum','Lihat laporan forum','quiet') : button('riwayat','Pantau aspirasi saya','quiet')}</section>
     <section class="report-panel" aria-label="Laporan terbaru">
       <div class="section-head">
         <h2>Laporan terbaru</h2>
@@ -280,7 +286,7 @@ function dashboard() {
 }
 
 function reportHistory(admin, kind = '', forumOnly = false) {
-  const title = forumOnly ? 'Forum Advokasi' : admin ? 'Manajemen laporan' : 'Riwayat laporan';
+  const title = forumOnly ? 'Laporan Forum Advokasi' : admin ? 'Manajemen laporan' : 'Riwayat laporan';
   const description = admin
     ? 'Cari laporan atau saring berdasarkan kategori dan status.'
     : 'Buka laporan untuk melihat perkembangan dan tanggapan admin.';
@@ -300,11 +306,25 @@ function reportHistory(admin, kind = '', forumOnly = false) {
       <label>Status
         <select id="filter-status">
           <option value="">Semua status</option>
-          ${options(statuses)}
+          ${options(forumOnly ? [5, 6, 2, 3, 4].map(index => statuses[index]) : statuses)}
         </select>
       </label>
     </div>
-    <div class="filters extra-filters"><label>Metode penyelesaian<select id="filter-method"><option value="">Semua metode</option><option value="direct">Penanganan langsung</option><option value="forum">Forum Advokasi</option><option value="pending">Belum ditentukan</option></select></label>${forumOnly ? `<label>Periode forum<select id="filter-period"><option value="">Semua periode</option>${options([...new Set(data.map(r=>r.forumPeriod).filter(Boolean))].sort())}</select></label>` : ''}</div>
+    <div class="filters extra-filters">
+      ${forumOnly ? `<label>Periode forum
+        <select id="filter-period">
+          <option value="">Semua periode</option>
+          ${options([...new Set(data.map(report => report.forumPeriod).filter(Boolean))].sort())}
+        </select>
+      </label>` : `<label>Metode penyelesaian
+        <select id="filter-method">
+          <option value="">Semua metode</option>
+          <option value="direct">Penanganan langsung</option>
+          <option value="forum">Forum Advokasi</option>
+          <option value="pending">Belum ditentukan</option>
+        </select>
+      </label>`}
+    </div>
     <div id="results" class="report-panel" aria-live="polite">${listing(data)}</div>`,
     { action: admin ? '' : button('buat', 'Buat laporan', 'primary', true) });
 }
@@ -366,21 +386,67 @@ function reportForm(report, type = '') {
 function methodLabel(method) {
   return method === 'forum' ? 'Forum Advokasi' : method === 'direct' ? 'Penanganan langsung' : 'Belum ditentukan';
 }
-function methodStatuses(method) {
-  return method === 'forum' ? [statuses[5],statuses[6],statuses[2],statuses[3],statuses[4]] : statuses.slice(1,5);
+function followUpOptions(method, current) {
+  const [pending, verified, processing, done, rejected, queued, discussed] = statuses;
+  const flows = {
+    direct: {
+      [pending]: [verified, done, rejected],
+      [verified]: [processing, done, rejected],
+      [processing]: [done, rejected],
+    },
+    forum: {
+      [pending]: [queued, rejected],
+      [queued]: [discussed, rejected],
+      [discussed]: [processing, done, rejected],
+      [processing]: [done, rejected],
+    },
+  };
+  const next = flows[method]?.[current] || [];
+  if (!method || current === pending) {
+    return '<option value="">Pilih status</option>' + options(next);
+  }
+  return options([current, ...next], current);
 }
+
 function followUpForm(report) {
-  const method = report.method || 'direct';
+  const { method, status, forumPeriod, forumResult } = report;
+  const showForum = method === 'forum';
   const year = new Date().getFullYear();
-  const periods = [...new Set([report.forumPeriod, ...[year-1,year,year+1].flatMap(y=>['I - '+y,'II - '+y])].filter(Boolean))];
+  const knownPeriods = [year - 1, year, year + 1].flatMap(y => ['I - ' + y, 'II - ' + y]);
+  const periods = [...new Set([forumPeriod, ...knownPeriods].filter(Boolean))];
   return `<form id="admin-form">
       <h2>Tindak lanjut</h2>
-      <label>Metode penyelesaian<select name="method"><option value="direct" ${method==='direct'?'selected':''}>Penanganan langsung oleh admin</option><option value="forum" ${method==='forum'?'selected':''}>Forum Advokasi</option></select></label>
-      <div id="forum-period" ${method==='forum'?'':'hidden'}><label>Periode Forum Advokasi (opsional)<select name="forumPeriod"><option value="">Belum ditentukan</option>${options(periods,report.forumPeriod)}</select></label><p class="note">Periode untuk pengelompokan agenda. Bulan, tanggal dan jam cukup ditulis dalam tanggapan admin.</p></div>
-      <label>Status<select name="status">${options(methodStatuses(method), report.status)}</select></label>
-      <label>Tanggapan admin<textarea name="response" maxlength="2000" placeholder="Tulis pembaruan, perkiraan jadwal forum, atau alasan penolakan."></textarea></label>
-      <div id="forum-result" ${method==='forum'?'':'hidden'}><label>Hasil pembahasan Forum Advokasi<textarea name="forumResult" maxlength="2000" placeholder="Jawaban atau keputusan pihak fakultas setelah forum.">${escapeHTML(report.forumResult)}</textarea></label></div>
-      <p class="note">Tanggapan baru disimpan sebagai riwayat. Alasan wajib diisi saat ditolak.</p>
+      <label>Metode penyelesaian
+        <select name="method" ${method ? 'disabled' : 'required'}>
+          <option value="">Pilih metode</option>
+          <option value="direct" ${method === 'direct' ? 'selected' : ''}>Penanganan langsung</option>
+          <option value="forum" ${showForum ? 'selected' : ''}>Forum Advokasi</option>
+        </select>
+      </label>
+      <div id="forum-period" ${showForum ? '' : 'hidden'}>
+        <label>Periode Forum Advokasi (opsional)
+          <select name="forumPeriod">
+            <option value="">Belum ditentukan</option>
+            ${options(periods, forumPeriod)}
+          </select>
+        </label>
+      </div>
+      <label>Status
+        <select name="status" required ${method ? '' : 'disabled'}>
+          ${followUpOptions(method, status)}
+        </select>
+      </label>
+      <label>Tanggapan admin
+        <textarea name="response" maxlength="2000"
+          placeholder="Tulis pembaruan, informasi jadwal untuk pelapor, atau alasan penolakan."></textarea>
+      </label>
+      <div id="forum-result" ${showForum ? '' : 'hidden'}>
+        <label>Hasil pembahasan Forum Advokasi
+          <textarea name="forumResult" maxlength="2000"
+            placeholder="Jawaban atau keputusan pihak fakultas.">${escapeHTML(forumResult)}</textarea>
+        </label>
+      </div>
+      <p class="note">Penjelasan wajib diisi saat langsung menyelesaikan atau menolak laporan.</p>
       <p id="admin-error" class="alert" role="alert" hidden></p>
       <button class="btn primary">Simpan tindak lanjut ${icon.arrow}</button>
     </form>`;
@@ -402,7 +468,8 @@ function detail(report) {
   const timeline = report.timeline.map(entry => `
     <li>
       <strong>${escapeHTML(entry.status)}</strong><br>
-      <small class="muted">${entry.date}</small>
+      <small class="muted">${escapeHTML(entry.date)}${admin && entry.actor
+        ? ' · ' + escapeHTML(entry.actor) : ''}</small>
       ${entry.note ? `<p class="detail-copy">${escapeHTML(entry.note)}</p>` : ''}
     </li>`).join('');
   const responses = report.responses.map(response => `

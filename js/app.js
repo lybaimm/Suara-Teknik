@@ -1,8 +1,9 @@
 'use strict';
 
-const homePages = ['beranda', 'alur', 'tentang'];
+const homePages = ['beranda', 'alur', 'tentang', 'agenda-home'];
 const routes = [
   ...homePages, 'masuk', 'daftar', 'dashboard', 'buat', 'riwayat', 'laporan', 'edit', 'kelola', 'forum',
+  'agenda', 'agenda-admin', 'agenda-baru', 'agenda-edit',
 ];
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 const main = document.querySelector('#main');
@@ -164,43 +165,57 @@ function wireReport(report) {
   });
 }
 
+function confirmRemoval(label, proceed) {
+  const dialog = document.getElementById('confirm');
+  dialog.querySelector('#confirm-title').textContent = `Hapus ${label} ini?`;
+  dialog.querySelector('#confirm-description').textContent = `${label[0].toUpperCase()}${label.slice(1)} ini akan dihapus.`;
+  dialog.querySelector('[value=hapus]').textContent = `Hapus ${label}`;
+  dialog.onsubmit = event => {
+    event.preventDefault();
+    const choice = event.submitter?.value || 'batal';
+    dialog.close(choice);
+    if (choice === 'hapus') proceed();
+  };
+  dialog.showModal();
+}
+
 function wireDetail(report) {
   if (!report) return;
   main.querySelector('#delete-report')?.addEventListener('click', () => {
-    const dialog = document.getElementById('confirm');
-    dialog.returnValue = 'batal';
-    dialog.showModal();
-    dialog.addEventListener('close', () => {
-      if (dialog.returnValue !== 'hapus') return;
-      save('delete', { id: report.id }, () => { go('riwayat'); showSuccess('Laporan berhasil dihapus.'); }, 'app-error');
-    }, { once: true });
+    confirmRemoval('laporan', () => {
+      save('delete', { id: report.id }, () => {
+        go('riwayat');
+        showSuccess('Laporan berhasil dihapus.');
+      }, 'app-error');
+    });
   });
 
-  const adminForm = main.querySelector('#admin-form');
-  if (!adminForm) return;
-  const response = adminForm.elements.response;
-  adminForm.elements.method.addEventListener('change', () => {
-    const method=adminForm.elements.method.value;
-    document.getElementById('forum-period').hidden=method!=='forum';
-    document.getElementById('forum-result').hidden=method!=='forum';
-    adminForm.elements.status.innerHTML=options(methodStatuses(method),method==='forum'?statuses[5]:statuses[2]);
+  const form = main.querySelector('#admin-form');
+  if (!form) return;
+  const { method, status, response, forumPeriod, forumResult } = form.elements;
+  method.addEventListener('change', () => {
+    document.getElementById('forum-period').hidden = method.value !== 'forum';
+    document.getElementById('forum-result').hidden = method.value !== 'forum';
+    status.disabled = !method.value;
+    status.innerHTML = followUpOptions(method.value, report.status);
   });
-  adminForm.addEventListener('input', () => response.setCustomValidity(''));
-  adminForm.addEventListener('submit', event => {
+  form.addEventListener('submit', event => {
     event.preventDefault();
     if (user?.role !== 'admin') return;
-
-    const status = adminForm.elements.status.value;
-    const value = response.value.trim();
-    const rejected = status === 'Ditolak';
-    if (rejected && !value) {
-      response.setCustomValidity('Tulis alasan penolakan.');
-      response.reportValidity();
+    if (!method.value || !status.value) {
+      showError('admin-error', 'Pilih metode dan status tindak lanjut.');
       return;
     }
-    save('follow-up', { id: report.id, status, response: value, method: adminForm.elements.method.value, forumPeriod: adminForm.elements.forumPeriod.value, forumResult: adminForm.elements.forumResult.value }, () => {
+    save('follow-up', {
+      id: report.id,
+      status: status.value,
+      response: response.value.trim(),
+      method: method.value,
+      forumPeriod: forumPeriod.value,
+      forumResult: forumResult.value.trim(),
+    }, () => {
       render();
-      showSuccess('Tindak lanjut berhasil disimpan. Status: ' + status + '.');
+      showSuccess('Tindak lanjut berhasil disimpan.');
     }, 'admin-error');
   });
 }
@@ -212,7 +227,7 @@ function render({ navigating = false } = {}) {
   const onHome = homePages.includes(page);
   const authPage = page === 'masuk' || page === 'daftar';
 
-  if (!onHome && !authPage && !user) {
+  if (!onHome && page !== 'agenda' && !authPage && !user) {
     go(page === 'buat' && kind ? 'masuk/' + kind : 'masuk');
     return;
   }
@@ -236,8 +251,18 @@ function render({ navigating = false } = {}) {
 
   let content;
   let report;
+  let agendaItem;
   const student = user?.role === 'mahasiswa';
   if (onHome) content = home();
+  if (page === 'agenda') content = agendaPage();
+  if (user?.role === 'admin') {
+    if (page === 'agenda-admin') content = agendaPage(true);
+    if (page === 'agenda-baru') content = agendaForm();
+    if (page === 'agenda-edit') {
+      agendaItem = events.find(item => String(item.id) === part);
+      if (agendaItem) content = agendaForm(agendaItem);
+    }
+  }
   if (authPage) content = auth(page === 'daftar');
   if (page === 'dashboard') content = dashboard();
   if (page === 'riwayat' && student || page === 'kelola' && user?.role === 'admin') {
@@ -259,6 +284,7 @@ function render({ navigating = false } = {}) {
     button('dashboard', 'Ke dashboard', 'primary')
   );
   wireAuth(page);
+  wireAgenda(agendaItem);
   wireFilters(kind, page === 'forum');
   if (page === 'laporan') wireDetail(report);
   if (page === 'buat' || page === 'edit') wireReport(report);
@@ -271,7 +297,7 @@ function render({ navigating = false } = {}) {
     if (navigating) main.focus({ preventScroll: true });
   }
   if (navigating && changedView && !reducedMotion.matches &&
-      page !== 'alur' && page !== 'tentang') {
+      !['alur', 'tentang', 'agenda-home'].includes(page)) {
     screenAnimation = main.firstElementChild.animate(
       [
         { opacity: .72, transform: 'translateY(5px)' },

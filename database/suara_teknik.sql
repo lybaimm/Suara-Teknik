@@ -47,90 +47,6 @@ CREATE TABLE IF NOT EXISTS responses (
   FOREIGN KEY (admin_id) REFERENCES users(id)
 ) ENGINE=InnoDB;
 
-CREATE TABLE IF NOT EXISTS demo_setup (
-  id TINYINT UNSIGNED PRIMARY KEY
-) ENGINE=InnoDB;
-
--- Data contoh dipasang sekali, sehingga impor ulang tidak menimpa laporan.
-START TRANSACTION;
-
-INSERT IGNORE INTO users (name, email, role)
-SELECT 'Mahasiswa', 'mahasiswa-demo@example.test', 'mahasiswa'
-WHERE NOT EXISTS (SELECT 1 FROM demo_setup WHERE id = 1);
-
-INSERT IGNORE INTO users (name, email, role)
-SELECT 'Admin', 'admin-demo@example.test', 'admin'
-WHERE NOT EXISTS (SELECT 1 FROM demo_setup WHERE id = 1);
-
-INSERT IGNORE INTO users (name, email, role)
-SELECT 'Mahasiswa Contoh', 'mahasiswa-lain@example.test', 'mahasiswa'
-WHERE NOT EXISTS (SELECT 1 FROM demo_setup WHERE id = 1);
-
-SET @mahasiswa = (SELECT id FROM users WHERE email = 'mahasiswa-demo@example.test');
-SET @lain = (SELECT id FROM users WHERE email = 'mahasiswa-lain@example.test');
-SET @admin = (SELECT id FROM users WHERE email = 'admin-demo@example.test');
-
-INSERT IGNORE INTO reports
-  (id, user_id, type, category, title, location, description, status, created_at)
-SELECT
-  1, @mahasiswa, 'Pengaduan', 'Fasilitas dan Infrastruktur',
-  'Proyektor di ruang kelas redup', 'Ruang B.204',
-  'Tulisan pada layar sulit terbaca dari kursi belakang, terutama saat kelas siang.',
-  'Sedang Diproses', '2026-11-16'
-WHERE NOT EXISTS (SELECT 1 FROM demo_setup WHERE id = 1);
-
-INSERT IGNORE INTO reports
-  (id, user_id, type, category, title, location, description, status, created_at)
-SELECT
-  2, @mahasiswa, 'Aspirasi', 'Kebersihan dan Kenyamanan',
-  'Usulan tempat sampah terpilah', 'Selasar gedung perkuliahan',
-  'Tambahkan tempat sampah terpilah di dekat tangga agar mudah dijangkau.',
-  'Menunggu Verifikasi', '2026-11-18'
-WHERE NOT EXISTS (SELECT 1 FROM demo_setup WHERE id = 1);
-
-INSERT IGNORE INTO reports
-  (id, user_id, type, category, title, location, description, status, created_at)
-SELECT
-  3, @lain, 'Aspirasi', 'Organisasi dan Kegiatan Mahasiswa',
-  'Papan informasi kegiatan mahasiswa', 'Lobi Fakultas Teknik',
-  'Usul memakai satu papan informasi untuk pengumuman kegiatan lintas himpunan.',
-  'Selesai', '2026-11-14'
-WHERE NOT EXISTS (SELECT 1 FROM demo_setup WHERE id = 1);
-
-INSERT INTO status_history (report_id, status, note, created_at)
-SELECT id, 'Menunggu Verifikasi', '', created_at
-FROM reports
-WHERE id IN (1, 2, 3)
-  AND NOT EXISTS (SELECT 1 FROM demo_setup WHERE id = 1);
-
-INSERT INTO status_history (report_id, status, note, created_at)
-SELECT 1, 'Diverifikasi', '', '2026-11-16'
-WHERE NOT EXISTS (SELECT 1 FROM demo_setup WHERE id = 1)
-UNION ALL
-SELECT 1, 'Sedang Diproses', '', '2026-11-17'
-WHERE NOT EXISTS (SELECT 1 FROM demo_setup WHERE id = 1)
-UNION ALL
-SELECT 3, 'Diverifikasi', '', '2026-11-14'
-WHERE NOT EXISTS (SELECT 1 FROM demo_setup WHERE id = 1)
-UNION ALL
-SELECT 3, 'Sedang Diproses', '', '2026-11-15'
-WHERE NOT EXISTS (SELECT 1 FROM demo_setup WHERE id = 1)
-UNION ALL
-SELECT 3, 'Selesai', '', '2026-11-16'
-WHERE NOT EXISTS (SELECT 1 FROM demo_setup WHERE id = 1);
-
-INSERT INTO responses (report_id, admin_id, message, created_at)
-SELECT 1, @admin,
-  'Laporan sudah kami teruskan ke pengelola ruang kelas untuk pengecekan.', '2026-11-17'
-WHERE NOT EXISTS (SELECT 1 FROM demo_setup WHERE id = 1)
-UNION ALL
-SELECT 3, @admin, 'Papan informasi tersedia di sisi kiri lobi.', '2026-11-16'
-WHERE NOT EXISTS (SELECT 1 FROM demo_setup WHERE id = 1);
-
-INSERT IGNORE INTO demo_setup (id) VALUES (1);
-COMMIT;
-
-USE suara_teknik;
 -- Aman untuk database lama; tidak menghapus data.
 SET @q = IF(EXISTS(SELECT 1 FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='reports' AND COLUMN_NAME='method'), 'SELECT 1', 'ALTER TABLE reports ADD COLUMN method VARCHAR(12) NULL');
 PREPARE stmt FROM @q; EXECUTE stmt; DEALLOCATE PREPARE stmt;
@@ -150,3 +66,31 @@ CREATE TABLE IF NOT EXISTS push_subscriptions (
  endpoint_hash CHAR(64) NOT NULL UNIQUE, endpoint TEXT NOT NULL, p256dh VARCHAR(120) NOT NULL, auth VARCHAR(64) NOT NULL,
  FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE, INDEX(user_id)
 ) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS events (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(150) NOT NULL,
+  type ENUM('Forum Advokasi', 'Diskusi Terbuka', 'Kegiatan Fakultas') NOT NULL,
+  event_date DATE NOT NULL,
+  start_time TIME NOT NULL,
+  end_time TIME,
+  building VARCHAR(150) NOT NULL,
+  room VARCHAR(100) NOT NULL,
+  topics TEXT NOT NULL,
+  status ENUM('draft', 'published', 'cancelled') NOT NULL DEFAULT 'draft',
+  created_by INT UNSIGNED NOT NULL,
+  FOREIGN KEY (created_by) REFERENCES users(id),
+  INDEX (status, event_date, start_time)
+) ENGINE=InnoDB;
+
+SET @q = IF(
+  EXISTS(SELECT 1 FROM information_schema.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'status_history' AND COLUMN_NAME = 'admin_id'),
+  'SELECT 1',
+  'ALTER TABLE status_history ADD COLUMN admin_id INT UNSIGNED NULL,
+     ADD CONSTRAINT fk_status_history_admin
+     FOREIGN KEY (admin_id) REFERENCES users(id) ON DELETE SET NULL'
+);
+PREPARE stmt FROM @q;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;

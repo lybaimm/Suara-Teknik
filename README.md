@@ -1,57 +1,5 @@
 # Suara Teknik
 
-## Menjalankan dari GitHub
-
-Repository ini berisi aplikasi PHP beserta database SQL. GitHub menyimpan sumber;
-untuk menjalankan login dan laporan diperlukan PHP serta MySQL/MariaDB.
-GitHub Pages tidak menjalankan PHP atau database aplikasi ini.
-
-```powershell
-git clone https://github.com/lybaimm/Suara-Teknik.git
-cd Suara-Teknik
-# Nyalakan MySQL/MariaDB terlebih dahulu.
-# Hanya bila MySQL memakai port selain 3306, sesuaikan misalnya:
-$env:SUARA_DB_PORT = '3308'
-php scripts/import-database.php snapshot
-.\start-local.ps1
-```
-
-Buka `http://127.0.0.1:8000/`. Jika `php` belum ada di PATH, gunakan
-`C:\xampp\php\php.exe` untuk perintah impor. `start-local.ps1` juga mendeteksi
-lokasi PHP XAMPP tersebut. Untuk port web lain: `.\start-local.ps1 -Port 8001`.
-Pastikan variabel koneksi dipasang di terminal yang sama sebelum menjalankan web.
-Pada komputer pengelola saat penyiapan, database memakai port **3308**.
-Komputer anggota lain bisa memakai MySQL XAMPP pada port **3306**.
-
-- `database/snapshot-lokal.sql`: salinan lengkap saat penyiapan repository,
-  berisi tujuh tabel, tiga akun contoh, dan tiga laporan. Kata sandi tetap berupa
-  hash; kredensial login disampaikan pengelola secara terpisah.
-- `database/suara_teknik.sql`: skema dan data contoh awal. Jika memilih instalasi
-  awal, jalankan `php scripts/import-database.php seed`, kemudian
-  `php scripts/setup-test-accounts.php` untuk membuat kata sandi acak akun contoh.
-- `database/upgrade.sql`: pembaruan untuk instalasi versi lama.
-
-Pilih salah satu snapshot atau seed. Skrip impor menolak database yang sudah
-berisi tabel agar tidak menimpa data lama. Untuk koneksi berbeda, atur
-`SUARA_DB_HOST`, `SUARA_DB_PORT`, `SUARA_DB_NAME`, `SUARA_DB_USER`, dan
-`SUARA_DB_PASSWORD`. Jangan commit kredensial atau data pengaduan nyata.
-`git pull` memperbarui kode; perubahan data dari penggunaan aplikasi tidak otomatis
-tersinkron ke GitHub atau komputer anggota lain.
-
-Untuk PHP CLI tanpa PowerShell:
-
-```sh
-php -S 127.0.0.1:8000 router.php
-```
-
-Pastikan folder sesi PHP dapat ditulis. Launcher PowerShell menyiapkan folder sesi
-di `.runtime/` yang diabaikan Git. Router mencegah file SQL, konfigurasi privat,
-skrip CLI, dan metadata Git diunduh melalui server pengembangan.
-Untuk Apache/XAMPP, impor salah satu SQL melalui phpMyAdmin dan buka folder
-proyek melalui localhost. File `.htaccess` melindungi folder database/privat.
-Composer diperlukan hanya untuk Web Push; instal dengan `composer install`.
-Kunci VAPID dan dependensi `vendor/` tidak disimpan ke Git.
-
 Suara Teknik adalah aplikasi web untuk mengelola aspirasi dan pengaduan mahasiswa Fakultas Teknik Universitas Jenderal Soedirman. Proyek
 ini disusun untuk Responsi 2 Praktikum Pemrograman Web I.
 
@@ -61,6 +9,9 @@ Aspirasi dan pengaduan tentang fasilitas, perkuliahan, dan layanan fakultas
 sering disampaikan melalui media yang berbeda. Akibatnya, mahasiswa sulit
 mengetahui apakah laporannya sudah diterima atau sedang ditangani. Suara
 Teknik memusatkan pengiriman, pemantauan status, dan tanggapan admin.
+Mahasiswa dapat mengikuti tindak lanjut laporannya dan menemukan jadwal
+forum terbuka. Admin dapat mengelompokkan laporan yang perlu dibahas
+bersama fakultas.
 
 Proyek ini mengangkat **SDG 16 — Perdamaian, Keadilan, dan Kelembagaan yang
 Tangguh**. Alurnya memberi mahasiswa ruang untuk berpartisipasi dan
@@ -70,22 +21,26 @@ menampilkan riwayat tindak lanjut agar prosesnya mudah dipantau.
 
 | No. | Modul | Alur yang dapat dicoba |
 | --- | --- | --- |
-| 1 | Registrasi mahasiswa | Daftar akun mahasiswa dengan nama, NIM, email, dan kata sandi. |
-| 2 | Masuk dan keluar | Masuk dengan email dan kata sandi akun terdaftar. Sesi dikelola oleh PHP. |
+| 1 | Registrasi mahasiswa | Daftar dengan nama, NIM unik, email, dan kata sandi. |
+| 2 | Masuk dan keluar | Mahasiswa masuk dengan NIM dan kata sandi. Admin dan akun lama tanpa NIM memakai email. |
 | 3 | Dashboard mahasiswa | Lihat jumlah, status, dan laporan terbaru milik mahasiswa. |
 | 4 | Pengiriman laporan | Kirim aspirasi atau pengaduan dengan foto opsional. |
 | 5 | Riwayat laporan | Buka laporan sendiri dan ubah atau hapus laporan sebelum verifikasi. |
 | 6 | Detail laporan | Baca nomor, isi, lokasi, kategori, dan foto laporan. |
-| 7 | Pelacakan status | Ikuti perubahan status beserta tanggalnya. |
+| 7 | Pelacakan status | Baca perubahan status terbaru di bagian teratas. |
 | 8 | Dashboard admin | Lihat ringkasan seluruh laporan yang masuk. |
 | 9 | Manajemen laporan | Cari dan filter laporan lalu perbarui statusnya. |
-| 10 | Tanggapan admin | Berikan tanggapan yang bisa dibaca mahasiswa. |
+| 10 | Tanggapan admin | Kirim pembaruan privat kepada pelapor. |
+| 11 | Laporan Forum Advokasi | Tentukan jalur laporan, pilih periode, lalu catat hasil pembahasan fakultas. |
+| 12 | Notifikasi dalam website | Lihat notifikasi laporan dan tandai sudah dibaca. |
+| 13 | Agenda publik | Lihat tanggal, jam WIB, gedung, ruang, dan topik Forum Advokasi dari beranda. |
+| 14 | Kelola Agenda | Admin menambah draf, menerbitkan, mengubah, membatalkan, dan menghapus agenda. |
 
 ## Teknologi dan struktur
 
 Antarmuka memakai HTML, CSS, dan JavaScript. PHP 8.0+ dengan ekstensi
 `pdo_mysql` dan `mbstring` menjalankan API serta sesi login. MySQL atau
-MariaDB menyimpan akun, laporan, foto, riwayat status, dan tanggapan admin.
+MariaDB menyimpan akun, laporan, foto, riwayat status, tanggapan admin, dan agenda.
 Kata sandi disimpan sebagai hash.
 
 | Berkas | Isi |
@@ -97,8 +52,9 @@ Kata sandi disimpan sebagai hash.
 | `js/app.js` dan `js/api.js` | Navigasi, formulir, dan permintaan ke API. |
 | `api/index.php` | Sesi, registrasi, login, dan endpoint aplikasi. |
 | `api/config.php` | Koneksi PDO ke database. |
+| `js/agenda.js` dan `api/agenda.php` | Agenda publik dan pengelolaan agenda admin. |
 | `api/laporan.php` | Query laporan, foto, status, dan tanggapan. |
-| `database/suara_teknik.sql` | Skema database dan data contoh untuk presentasi. |
+| `database/suara_teknik.sql` | Skema database untuk instalasi baru. |
 | `assets/` | Foto gedung Fakultas Teknik dan font. |
 
 ## Instalasi di XAMPP
@@ -107,9 +63,9 @@ Kata sandi disimpan sebagai hash.
 2. Nyalakan **Apache** dan **MySQL** dari XAMPP Control Panel.
 3. Buka `http://localhost/phpmyadmin`, pilih **Import**, lalu pilih
    `Suara_Teknik/database/suara_teknik.sql` dan jalankan impor. SQL akan
-   membuat database `suara_teknik` beserta tabel dan data contoh.
+   membuat database `suara_teknik` beserta tabel aplikasi.
 4. Buka `http://localhost/Suara_Teknik/` melalui browser.
-5. Pilih **Masuk** dan isi email serta kata sandi. Akun baru dapat dibuat melalui **Daftar akun**. Untuk akun uji coba, ikuti langkah berikut.
+5. Pilih **Daftar akun** untuk membuat akun mahasiswa, lalu masuk dengan NIM dan kata sandi. Siapkan akun admin mengikuti langkah di bawah.
 
 Konfigurasi bawaan mengikuti XAMPP lokal dengan host `127.0.0.1`, port
 `3306`, pengguna `root`, dan kata sandi kosong. Jika konfigurasimu
@@ -118,30 +74,27 @@ berbeda, gunakan variabel lingkungan `SUARA_DB_HOST`, `SUARA_DB_PORT`,
 nilai lokal di `api/config.php`. Untuk melihat tampilan sekaligus
 menjalankan API, akses alamat localhost di atas.
 
-Jika memakai PHP CLI dan MySQL yang sudah berjalan, impor SQL lalu jalankan
+Jika memakai PHP CLI dan MySQL yang sudah berjalan, jalankan
 perintah berikut dari folder `Suara_Teknik` dan buka
 `http://127.0.0.1:8000/`.
 
 ```sh
-php -S 127.0.0.1:8000
+php scripts/import-database.php
+php -S 127.0.0.1:8000 router.php
 ```
 
-### Akun uji coba privat (hanya pengelola)
+### Menyiapkan akun admin
 
-Tombol dan endpoint login otomatis dinonaktifkan. Akun contoh yang sudah ada tetap dipertahankan agar riwayat laporan tidak hilang. Untuk mengaktifkan login dengan kata sandi, jalankan sekali melalui CMD (sesuaikan drive XAMPP):
-
-```bat
-cd /d D:\xampp\htdocs\Suara_Teknik
-D:\xampp\php\php.exe scripts\setup-test-accounts.php
-```
-
-Skrip CLI menampilkan email dan kata sandi acak untuk akun mahasiswa dan admin contoh yang masih ada. Simpan hasilnya secara privat. Menjalankan ulang skrip mengganti kata sandi kedua akun tersebut. Skrip tidak membuat akun baru atau menghapus laporan. Jangan unggah kata sandinya ke GitHub. Jika akun contoh tidak tersedia, daftarkan akun biasa dan ubah peran akun admin melalui database sebagai pengelola.
+Daftarkan akun yang akan dipakai admin melalui formulir biasa. Di phpMyAdmin,
+pilih database `suara_teknik`, buka tab **SQL**, lalu jalankan perintah berikut
+dengan email akun yang tadi didaftarkan. Setelah itu, admin masuk dengan email
+dan kata sandi akun tersebut. Mahasiswa masuk dengan NIM.
 
 ```sql
-UPDATE users SET role = 'admin' WHERE email = 'admin-kamu@example.test';
+UPDATE users SET role = 'admin' WHERE email = 'email-admin@example.test';
 ```
 
-## Alur demo untuk presentasi
+## Alur presentasi
 
 1. Sebagai mahasiswa, buat laporan lalu periksa status awalnya di detail.
 2. Pilih **Keluar**, masuk sebagai admin, dan cari laporan tadi.
@@ -160,26 +113,39 @@ Video presentasi berdurasi minimal 7 menit dengan partisipasi seluruh
 anggota. Setiap anggota mengunggah Showcase secara publik melalui Instagram
 atau LinkedIn.
 
-## Pembaruan versi Advokasi dan Notifikasi
+## Memperbarui instalasi lama
 
-Versi ini mempertahankan kode lama dan desain biru-putih. PHP minimal **8.0** untuk fitur inti; PHP 8.2 atau lebih baru dianjurkan, terutama untuk Web Push. Perbaikan `array_merge` menggantikan unpack array ber-key string sehingga kompatibel dengan PHP 8.0. Tidak perlu menghapus database lama.
+1. Ekspor database `suara_teknik` melalui phpMyAdmin sebagai cadangan.
+2. Ganti folder aplikasi di `htdocs` dengan folder `Suara_Teknik` dari ZIP.
+3. Jika database berasal dari versi sebelum fitur Agenda, impor
+   `database/suara_teknik.sql` di phpMyAdmin. File ini juga menyiapkan tabel
+   agenda dan kolom audit status sambil mempertahankan akun dan laporan.
+   Jika sudah memakai versi Forum Advokasi, lewati impor.
+4. Buka `http://localhost/Suara_Teknik/` dan tekan Ctrl+F5.
 
-### Untuk pengguna yang sudah punya database (seperti instalasi lama)
+Untuk instalasi kosong, gunakan `database/suara_teknik.sql`.
+Jika memakai konfigurasi khusus pada instalasi lama, terapkan kembali
+koneksi database di `api/config.php` atau melalui variabel lingkungan.
 
-1. Keluar dari akun, tutup tab website. Cadangkan folder lama dan ekspor database `suara_teknik` melalui phpMyAdmin (Export → Quick → SQL).
-2. Ekstrak ZIP baru dan **ganti** folder `D:\xampp\htdocs\Suara_Teknik` (jika instalasi di D:). Jangan sampai folder bersarang `Suara_Teknik/Suara_Teknik`. Untuk instalasi baru, impor `database/suara_teknik.sql` saja.
-3. Jika memakai database lama, pilih `database/upgrade.sql` di menu Import phpMyAdmin, lalu Go. Skrip ini menambahkan kolom `method`, `forum_period`, `forum_result` serta dua tabel notifikasi. Tidak menghapus laporan atau akun. Laporan lama yang sudah diverifikasi dikategorikan penanganan langsung; yang belum diverifikasi tetap belum ditentukan.
-4. Pastikan Apache dan MySQL aktif, akses `http://localhost/Suara_Teknik/` dan tekan Ctrl+F5. Masuk dengan email dan kata sandi akun yang telah dibuat atau akun uji coba yang sudah dikonfigurasi.
-5. Jika API menampilkan error umum, lihat log PHP/Apache (misalnya `D:\xampp\apache\logs\error.log`); jangan tampilkan exception database ke pengguna publik.
+## Alur laporan dan agenda
 
-### Alur baru
-
-- Mahasiswa membuat laporan; admin menerima notifikasi dalam website. Admin menentukan metode langsung atau forum. Mahasiswa dapat mengedit/menghapus sebelum verifikasi saja.
-- Forum Advokasi terlaksana dua kali dalam satu tahun; periode I/II dan tahun dapat dipilih atau dibiarkan belum ditentukan untuk kebutuhan rekap. Bulan, tanggal dan jam hanyalah teks dalam **Tanggapan admin**, tidak ada kolom tanggal/jam forum khusus.
-- Admin dapat menyimpan tanggapan baru tanpa mengganti status. Tanggapan sebelumnya tetap tercatat. Hasil forum tersedia terpisah dari tanggapan, sebagai hasil terakhir yang diperbarui oleh admin. `Telah Dibahas` tidak sama dengan `Selesai`. Untuk kedua status itu pada metode forum, isi hasil pembahasan terlebih dahulu.
-- Halaman Forum Advokasi admin memfilter laporan menurut periode, kategori, status, metode dan pencarian. Mahasiswa melihat metode, status, tanggapan, dan hasil terkait laporannya sendiri melalui dashboard dan riwayat.
-- Popup sukses muncul setelah API sukses membuat/mengedit/menghapus laporan atau menyimpan tindak lanjut.
-- Lonceng menampilkan hingga 100 notifikasi terbaru per akun; pembaruan otomatis diperiksa setiap 15 detik saat tab aktif. Klik notifikasi untuk menandainya dibaca dan membuka laporan. Jika laporan sudah dihapus, kembali ke riwayat/manajemen laporan. Notifikasi tetap tersedia tanpa Web Push.
+- Admin memilih **Penanganan langsung** atau **Forum Advokasi**. Laporan
+  sederhana dapat langsung selesai dari status awal dengan penjelasan.
+  Laporan forum masuk **Menunggu Forum Advokasi**, lalu **Telah Dibahas**
+  setelah admin mencatat hasilnya. Setelah itu admin dapat meneruskan
+  penanganan atau menutup laporan.
+- Pelapor melihat tanggapan privat, termasuk jadwal yang terkait dengan
+  laporannya. Perkembangan tampil dari yang terbaru. Admin dapat melihat
+  nama pencatat untuk perubahan status baru.
+- Admin membuka **Kelola Agenda** lalu **Tambah agenda**. Isi judul,
+  tanggal, jam WIB, gedung, ruang dan pokok bahasan publik.
+  Agenda baru menggunakan status **Draf**. Pilih **Terbit** untuk
+  menampilkannya di beranda. Agenda mendatang yang dibatalkan diberi
+  label **Dibatalkan**. Forum yang sudah lewat tetap dapat dikelola admin.
+  Agenda nonforum dari versi sebelumnya tetap tersimpan di database.
+- Semua mahasiswa dapat melihat agenda dan datang langsung ke Forum
+  Advokasi tanpa pendaftaran. Isi laporan pribadi disampaikan melalui
+  **Tanggapan admin** pada detail laporan.
 
 ### Mengaktifkan Web Push (opsional, tetapi diperlukan untuk demo push browser)
 
@@ -198,18 +164,6 @@ Fitur inti tidak memerlukan Composer. Web Push sungguhan membutuhkan koneksi int
 3. Refresh website. Login, klik **Aktifkan notifikasi** pada dialog atau melalui lonceng → Pengaturan push. Pilih Allow/Izinkan pada prompt browser.
 4. Uji memakai **dua profil Chrome berbeda**, satu mahasiswa dan satu admin. Jangan logout dari akun penerima sebelum tes: logout mencabut langganan browser ini untuk menjaga privasi. Tab penerima boleh ditutup; browser/OS harus mendukung pengiriman latar belakang. Kirim laporan dari mahasiswa, lalu balas dari admin. Klik push untuk membuka laporan melalui Service Worker.
 5. Jika push tidak diterima, tetap periksa lonceng, izin browser, koneksi internet, dan log PHP. Push merupakan pengiriman best-effort setelah transaksi tersimpan; kegagalan push tidak membatalkan laporan. Tidak ada retry/antrean persisten di versi praktikum ini. Push menggunakan pesan umum agar isi pengaduan tidak tampil di lock screen. Endpoint dibatasi pada layanan push browser yang dikenal; browser lain bisa tidak didukung.
-
-## Modul versi baru (13 modul)
-
-Sepuluh modul asli tetap ada. Tiga tambahan:
-
-| No. | Modul | Demonstrasi |
-|---|---|---|
-| 11 | Pengelolaan Forum Advokasi | Tentukan metode/periode, buka agenda admin, simpan hasil fakultas. |
-| 12 | Notifikasi dalam website | Laporan baru, perubahan, tanggapan, status; tandai dibaca. |
-| 13 | Web Push Notification | Daftar perangkat, terima push di luar tab, buka laporan, nonaktifkan. |
-
-Popup sukses merupakan fitur lintas modul. Integrasi: HTML/CSS sebagai antarmuka responsif, JavaScript untuk DOM, event, Fetch API dan validasi, PHP untuk autentikasi, sesi, otorisasi dan transaksi, MySQL untuk CRUD dan relasi. Modul 13 memerlukan konfigurasi tambahan di atas.
 
 ## Checklist pengujian manual
 

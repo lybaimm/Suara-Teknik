@@ -54,13 +54,16 @@ function getReports(PDO $db, array $user): array
         ORDER BY id
     ", $values)->fetchAll();
 
+    $actorVisible = $user['role'] === 'admin';
     $reports = [];
     foreach ($rows as $row) {
         $id = (int) $row['id'];
         $code = reportCode($id);
         $timeline = runQuery($db, '
-            SELECT status, note, created_at FROM status_history
-            WHERE report_id = ? ORDER BY id DESC
+            SELECT history.status, history.note, history.created_at, users.name AS actor
+            FROM status_history AS history
+            LEFT JOIN users ON history.admin_id = users.id
+            WHERE history.report_id = ? ORDER BY history.id DESC
         ', [$id])->fetchAll();
         $responses = runQuery($db, '
             SELECT message, created_at FROM responses
@@ -85,6 +88,7 @@ function getReports(PDO $db, array $user): array
                 'status' => $entry['status'],
                 'date' => reportDate($entry['created_at']),
                 'note' => $entry['note'],
+                'actor' => $actorVisible ? $entry['actor'] : null,
             ], $timeline),
             'responses' => array_map(static fn(array $entry): array => [
                 'text' => $entry['message'],
@@ -151,11 +155,13 @@ function readPhoto(array $input): ?array
     return [$bytes, $match[1]];
 }
 
-function addHistory(PDO $db, int $id, string $status, string $note = ''): void
+function addHistory(
+    PDO $db, int $id, string $status, string $note = '', ?int $adminId = null
+): void
 {
     runQuery($db, '
-        INSERT INTO status_history (report_id, status, note) VALUES (?, ?, ?)
-    ', [$id, $status, $note]);
+        INSERT INTO status_history (report_id, status, note, admin_id) VALUES (?, ?, ?, ?)
+    ', [$id, $status, $note, $adminId]);
 }
 
 function saveReport(PDO $db, array $user, array $input, ?int $id): string
@@ -200,34 +206,85 @@ function requirePending(PDO $db, array $user, int $id): void
     }
 }
 
+function nextReportStatuses(string $method, string $current): array
+{
+    $flow = [
+        'direct' => [
+            INITIAL_STATUS => ['Diverifikasi', 'Selesai', 'Ditolak'],
+            'Diverifikasi' => ['Sedang Diproses', 'Selesai', 'Ditolak'],
+            'Sedang Diproses' => ['Selesai', 'Ditolak'],
+        ],
+        'forum' => [
+            INITIAL_STATUS => ['Menunggu Forum Advokasi', 'Ditolak'],
+            'Menunggu Forum Advokasi' => ['Telah Dibahas', 'Ditolak'],
+            'Telah Dibahas' => ['Sedang Diproses', 'Selesai', 'Ditolak'],
+            'Sedang Diproses' => ['Selesai', 'Ditolak'],
+        ],
+    ];
+    return $flow[$method][$current] ?? [];
+}
+
 function followUp(PDO $db, array $user, array $input, int $id): void
 {
     $status = field($input, 'status', 30);
     $note = field($input, 'response', 2000, false);
-    $method = field($input, 'method', 12);
+    $method = field($input, 'method', 12, false);
     $period = field($input, 'forumPeriod', 30, false);
     $result = field($input, 'forumResult', 2000, false);
-    $allowed = $method === 'forum'
-        ? ['Menunggu Forum Advokasi','Telah Dibahas','Sedang Diproses','Selesai','Ditolak']
-        : ['Diverifikasi','Sedang Diproses','Selesai','Ditolak'];
-    if (!in_array($method, ['direct','forum'], true) || !in_array($status, $allowed, true)) {
-        fail(422, 'Metode atau status tidak valid.');
+    if (!in_array($method, ['direct', 'forum'], true)) {
+        fail(422, 'Pilih metode penanganan terlebih dahulu.');
     }
-    if ($status === 'Ditolak' && $note === '') fail(422, 'Tulis alasan penolakan.');
-    if ($method === 'forum' && $period !== '' && !preg_match('/^(I|II) - [0-9]{4}$/D', $period)) fail(422, 'Periode forum tidak valid.');
+    if ($method === 'forum' && $period !== '' && !preg_match('/^(I|II) - [0-9]{4}$/D', $period)) {
+        fail(422, 'Periode forum tidak valid.');
+    }
+
     $report = getReport($db, $user, $id, true);
-    if ($method === 'forum' && in_array($status, ['Telah Dibahas','Selesai'], true) && $result === '') fail(422, 'Isi hasil pembahasan fakultas.');
-    if ($method === 'direct') { $period = ''; $result = ''; }
-    $period = $period === '' ? null : $period;
-    $result = $result === '' ? null : $result;
-    $changed = $status !== $report['status'] || $method !== $report['method'] || $period !== $report['forum_period'] || $result !== $report['forum_result'];
-    runQuery($db, 'UPDATE reports SET status=?, method=?, forum_period=?, forum_result=? WHERE id=?', [$status,$method,$period,$result,$id]);
-    if ($status !== $report['status'] || $method !== $report['method']) {
-        addHistory($db, $id, $status, $method === 'forum' ? 'Jalur Forum Advokasi' : 'Penanganan langsung');
+    $current = $report['status'];
+    if ($report['method'] && $report['method'] !== $method) {
+        fail(409, 'Metode penanganan sudah ditetapkan.');
     }
-    if ($note !== '') runQuery($db, 'INSERT INTO responses (report_id, admin_id, message) VALUES (?, ?, ?)', [$id,$user['id'],$note]);
+    if ($current === INITIAL_STATUS && $status === $current) {
+        fail(422, 'Pilih status awal setelah menentukan metode.');
+    }
+    $statusChanged = $status !== $current;
+    if ($statusChanged && !in_array($status, nextReportStatuses($method, $current), true)) {
+        fail(409, 'Perpindahan status tidak sesuai alur penanganan.');
+    }
+    if ($statusChanged && $status === 'Ditolak' && $note === '') {
+        fail(422, 'Tulis alasan penolakan.');
+    }
+    if ($current === INITIAL_STATUS && $status === 'Selesai' && $note === '') {
+        fail(422, 'Tulis penjelasan penyelesaian langsung.');
+    }
+    if ($method === 'forum' && in_array($status, ['Telah Dibahas', 'Sedang Diproses', 'Selesai'], true)
+        && $result === '' && ($statusChanged || $report['forum_result'])) {
+        fail(422, 'Isi hasil pembahasan fakultas.');
+    }
+    $period = $method === 'forum' && $period !== '' ? $period : null;
+    $result = $method === 'forum' && $result !== '' ? $result : null;
+    $methodChanged = $method !== $report['method'];
+    $changed = $statusChanged || $methodChanged ||
+        $period !== $report['forum_period'] || $result !== $report['forum_result'];
+
+    if ($changed) {
+        runQuery($db, '
+            UPDATE reports SET status = ?, method = ?, forum_period = ?, forum_result = ?
+            WHERE id = ?
+        ', [$status, $method, $period, $result, $id]);
+    }
+    if ($statusChanged || $methodChanged) {
+        $historyNote = $method === 'forum' ? 'Jalur Forum Advokasi' : 'Penanganan langsung';
+        addHistory($db, $id, $status, $historyNote, (int) $user['id']);
+    }
+    if ($note !== '') {
+        runQuery($db, '
+            INSERT INTO responses (report_id, admin_id, message) VALUES (?, ?, ?)
+        ', [$id, $user['id'], $note]);
+    }
     if ($changed || $note !== '') {
-        $title = $status !== $report['status'] ? 'Status laporan diperbarui' : 'Pembaruan laporan';
-        notifyUser($db, (int)$report['user_id'], reportCode($id), $title, 'Laporan '.reportCode($id).' memiliki pembaruan. Buka detail laporan.');
+        $title = $statusChanged ? 'Status laporan diperbarui' : 'Pembaruan laporan';
+        $code = reportCode($id);
+        notifyUser($db, (int) $report['user_id'], $code, $title,
+            'Laporan ' . $code . ' memiliki pembaruan. Buka detail laporan.');
     }
 }

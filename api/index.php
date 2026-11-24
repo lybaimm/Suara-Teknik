@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 require __DIR__ . '/config.php';
 require __DIR__ . '/laporan.php';
+require __DIR__ . '/agenda.php';
 require __DIR__ . '/notifications.php';
 
 header('Cache-Control: no-store');
@@ -53,10 +54,18 @@ function emailField(array $input): string
     return $email;
 }
 
+function normalizeNim(string $value): string
+{
+    return mb_strtoupper(trim($value), 'UTF-8');
+}
+
 function registerAccount(PDO $db, array $input): void
 {
     $name = field($input, 'name', 100);
-    $nim = field($input, 'nim', 30);
+    $nim = normalizeNim(field($input, 'nim', 30));
+    if (!preg_match('/^[A-Z0-9-]{1,30}$/D', $nim)) {
+        fail(422, 'NIM hanya boleh berisi huruf, angka, atau tanda hubung.');
+    }
     $email = emailField($input);
     $hash = password_hash(passwordField($input), PASSWORD_DEFAULT);
 
@@ -74,14 +83,20 @@ function registerAccount(PDO $db, array $input): void
 
 function loginAccount(PDO $db, array $input): array
 {
-    $email = emailField($input);
+    $identifier = field($input, 'identifier', 100);
     $password = passwordField($input);
-    $account = runQuery($db, '
-        SELECT id, name, role, password_hash FROM users WHERE email = ?
-    ', [$email])->fetch();
+    $account = str_contains($identifier, '@')
+        ? runQuery($db, "
+            SELECT id, name, role, password_hash FROM users
+            WHERE email = ? AND (role = 'admin' OR nim IS NULL OR nim = '')
+        ", [strtolower($identifier)])->fetch()
+        : runQuery($db, "
+            SELECT id, name, role, password_hash FROM users
+            WHERE nim = ? AND role = 'mahasiswa'
+        ", [normalizeNim($identifier)])->fetch();
     if (!$account || !$account['password_hash'] ||
         !password_verify($password, $account['password_hash'])) {
-        fail(401, 'Email atau kata sandi tidak cocok.');
+        fail(401, 'NIM, email, atau kata sandi tidak cocok.');
     }
     unset($account['password_hash']);
 
@@ -114,6 +129,7 @@ function sendState(PDO $db, ?array $user, array $extra = []): void
     $state = [
         'user' => $user,
         'reports' => $user ? getReports($db, $user) : [],
+        'events' => getAgenda($db, ($user['role'] ?? '') === 'admin'),
         'csrf' => $_SESSION['csrf'],
         'notifications' => $user ? getNotifications($db, $user['id']) : [],
         'pushKey' => $user ? pushPublicKey() : '',
@@ -175,9 +191,6 @@ try {
         registerAccount($db, $input);
         sendState($db, $user);
     }
-    if ($action === 'demo') {
-        fail(403, 'Silakan masuk dengan email dan kata sandi.');
-    }
     if ($action === 'login') {
         sendState($db, loginAccount($db, $input));
     }
@@ -208,6 +221,9 @@ try {
     $extra = [];
     if ($action === 'follow-up' && $user['role'] === 'admin') {
         followUp($db, $user, $input, reportNumber(field($input, 'id', 13)));
+    } elseif ($user['role'] === 'admin' &&
+              in_array($action, ['event-create', 'event-edit', 'event-delete'], true)) {
+        manageAgenda($db, $user, $input, $action);
     } elseif (in_array($action, ['create', 'edit', 'delete'], true) &&
               $user['role'] === 'mahasiswa') {
         $id = $action === 'create' ? null : reportNumber(field($input, 'id', 13));
