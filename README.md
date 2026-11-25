@@ -59,12 +59,12 @@ Kata sandi disimpan sebagai hash.
 
 ## Instalasi di XAMPP
 
-1. Ekstrak ZIP. Salin folder `Suara_Teknik` ke `C:\xampp\htdocs`.
+1. Ekstrak ZIP. Salin folder `Suara-Teknik-main` ke `C:\xampp\htdocs`.
 2. Nyalakan **Apache** dan **MySQL** dari XAMPP Control Panel.
 3. Buka `http://localhost/phpmyadmin`, pilih **Import**, lalu pilih
-   `Suara_Teknik/database/suara_teknik.sql` dan jalankan impor. SQL akan
+   `Suara-Teknik-main/database/suara_teknik.sql` dan jalankan impor. SQL akan
    membuat database `suara_teknik` beserta tabel aplikasi.
-4. Buka `http://localhost/Suara_Teknik/` melalui browser.
+4. Buka `http://localhost/Suara-Teknik-main/` melalui browser.
 5. Pilih **Daftar akun** untuk membuat akun mahasiswa, lalu masuk dengan NIM dan kata sandi. Siapkan akun admin mengikuti langkah di bawah.
 
 Konfigurasi bawaan mengikuti XAMPP lokal dengan host `127.0.0.1`, port
@@ -75,7 +75,7 @@ nilai lokal di `api/config.php`. Untuk melihat tampilan sekaligus
 menjalankan API, akses alamat localhost di atas.
 
 Jika memakai PHP CLI dan MySQL yang sudah berjalan, jalankan
-perintah berikut dari folder `Suara_Teknik` dan buka
+perintah berikut dari folder `Suara-Teknik-main` dan buka
 `http://127.0.0.1:8000/`.
 
 ```sh
@@ -83,16 +83,18 @@ php scripts/import-database.php
 php -S 127.0.0.1:8000 router.php
 ```
 
-### Menyiapkan akun admin
+### Menyiapkan akun admin di XAMPP
 
-Daftarkan akun yang akan dipakai admin melalui formulir biasa. Di phpMyAdmin,
-pilih database `suara_teknik`, buka tab **SQL**, lalu jalankan perintah berikut
-dengan email akun yang tadi didaftarkan. Setelah itu, admin masuk dengan email
-dan kata sandi akun tersebut. Mahasiswa masuk dengan NIM.
+Daftarkan akun lewat web dengan email yang akan dipakai. Di phpMyAdmin,
+pilih database `suara_teknik`, buka tab **SQL**, lalu jalankan perintah ini
+setelah mengganti alamat emailnya dengan email akun tadi.
 
 ```sql
 UPDATE users SET role = 'admin' WHERE email = 'email-admin@example.test';
 ```
+
+Admin masuk dengan email. Mahasiswa masuk dengan NIM. Untuk menguji
+aturan produksi dari lokal, ikuti bagian Deploy ke server publik.
 
 ## Alur presentasi
 
@@ -113,15 +115,32 @@ Video presentasi berdurasi minimal 7 menit dengan partisipasi seluruh
 anggota. Setiap anggota mengunggah Showcase secara publik melalui Instagram
 atau LinkedIn.
 
+## Berkas yang diunggah ke GitHub
+
+Unggah source code, termasuk `.gitignore`, `.htaccess`, dan satu skema
+`database/suara_teknik.sql`. Skema ini dapat diimpor untuk membuat tabel
+dan tidak berisi akun. Buat akun admin dengan email dan kata sandi
+masing-masing di database tujuan setelah impor (lihat bagian Deploy).
+
+Simpan dump database, data NIM, laporan mahasiswa, foto bukti, file
+`.env`, dan kredensial di luar repo. Jangan mengganti skema di atas
+dengan hasil ekspor phpMyAdmin. Cek perubahan yang disiapkan untuk commit
+sebelum push. Jika kredensial sudah terlanjur dipublikasikan, ganti
+kredensial itu, lalu tangani riwayat commit bila diperlukan.
+
+GitHub menyimpan source. Jalankan PHP dan database di hosting yang
+mendukung PHP dan MySQL atau MariaDB.
+
 ## Memperbarui instalasi lama
 
 1. Ekspor database `suara_teknik` melalui phpMyAdmin sebagai cadangan.
-2. Ganti folder aplikasi di `htdocs` dengan folder `Suara_Teknik` dari ZIP.
+2. Ganti folder aplikasi di `htdocs` dengan folder `Suara-Teknik-main` dari ZIP.
 3. Jika database berasal dari versi sebelum fitur Agenda, impor
    `database/suara_teknik.sql` di phpMyAdmin. File ini juga menyiapkan tabel
    agenda dan kolom audit status sambil mempertahankan akun dan laporan.
-   Jika sudah memakai versi Forum Advokasi, lewati impor.
-4. Buka `http://localhost/Suara_Teknik/` dan tekan Ctrl+F5.
+   Untuk pembaruan paket hosting ini, impor juga SQL agar tabel
+   `login_limits` tersedia, termasuk bila fitur Forum Advokasi sudah ada.
+4. Buka `http://localhost/Suara-Teknik-main/` dan tekan Ctrl+F5.
 
 Untuk instalasi kosong, gunakan `database/suara_teknik.sql`.
 Jika memakai konfigurasi khusus pada instalasi lama, terapkan kembali
@@ -158,15 +177,86 @@ dan penyelesaian laporannya. Admin menerima notifikasi saat laporan masuk,
 diperbarui, atau dihapus oleh pelapor. Daftar diperbarui saat dibuka dan
 dicek otomatis setiap 15 detik selama tab aktif.
 
-### Deploy ke server publik
+## Deploy ke server publik
 
-Gunakan HTTPS dan isi konfigurasi database lewat variabel lingkungan.
-Gunakan akun database khusus aplikasi dengan hak akses seperlunya.
-Lindungi direktori database, private, dan scripts dari akses HTTP.
-Jika server mengabaikan .htaccess, atur pemblokiran lewat konfigurasi
-hosting. Saat mengimpor SQL untuk produksi, lewati blok akun pengujian
-lokal di bagian akhir. Jika akun tersebut sudah pernah dipakai di server,
-ganti kata sandinya sebelum membuka akses publik.
+1. Gunakan PHP yang masih didukung (disarankan 8.4+) dengan `pdo_mysql` dan `mbstring`, serta MySQL
+   atau MariaDB. Aktifkan HTTPS dan pengalihan HTTP ke HTTPS.
+2. Impor `database/suara_teknik.sql` dengan pengguna database yang berwenang
+   membuat atau memperbarui tabel. File ini hanya memuat skema dan migrasi.
+   Gunakan nama database `suara_teknik`, atau sesuaikan perintah
+   `CREATE DATABASE` dan `USE` dengan nama dari hosting. Jika memperbarui
+   database lama, ekspor cadangan lalu impor SQL ke database tersebut
+   untuk menambah tabel `login_limits`.
+3. Atur variabel lingkungan berikut untuk PHP web dan CLI.
+
+   | Variabel | Nilai |
+   | --- | --- |
+   | `SUARA_ENV` | `production` |
+   | `SUARA_DB_HOST` | Host database dari hosting |
+   | `SUARA_DB_PORT` | Port database, biasanya `3306` |
+   | `SUARA_DB_NAME` | Nama database yang diimpor |
+   | `SUARA_DB_USER` | Pengguna khusus aplikasi, bukan `root` |
+   | `SUARA_DB_PASSWORD` | Kata sandi unik pengguna database |
+
+   Akun database aplikasi memerlukan hak `SELECT`, `INSERT`, `UPDATE`,
+   serta `DELETE` pada database aplikasi. Jika HTTPS berhenti pada proxy
+   tepercaya, atur web server agar PHP mengenali HTTPS. Sebagai pilihan
+   konfigurasi, set `SUARA_TLS_TERMINATED=1` dari sisi server hanya jika
+   origin tidak dapat diakses langsung dari publik dan proxy sudah
+   mengalihkan HTTP ke HTTPS. Teruskan IP pengunjung melalui pengaturan
+   proxy/web server yang tepercaya supaya batas per IP berfungsi.
+4. Gunakan aturan `.htaccess` yang disertakan bila menjalankan Apache
+   dengan override yang mendukungnya. Di Nginx atau hosting yang
+   mengabaikan `.htaccess`, blokir akses HTTP ke direktori `database/`,
+   `private/`, `scripts/` dan file konfigurasi tersembunyi di server.
+   Sebelum membuka akses publik, uji dari browser bahwa file SQL
+   dan skrip CLI mendapat status 403 atau 404.
+5. Buat tiga akun admin dengan kata sandi baru dan berbeda. Contoh ini
+   dijalankan di terminal Bash hosting dari folder proyek. Ketik kata
+   sandi baru pada tiap perintah `read`. Ganti alamat email contoh dengan
+   email asli setiap admin. Input kata sandi tidak terlihat di layar.
+
+   ```bash
+   read -rsp 'Kata sandi Baim: ' suara_password; echo
+   printf '%s\n' "$suara_password" | php scripts/set-account.php admin Baim baim@example.test
+   unset suara_password
+
+   read -rsp 'Kata sandi Nova: ' suara_password; echo
+   printf '%s\n' "$suara_password" | php scripts/set-account.php admin Nova nova@example.test
+   unset suara_password
+
+   read -rsp 'Kata sandi Meydina: ' suara_password; echo
+   printf '%s\n' "$suara_password" | php scripts/set-account.php admin Meydina meydina@example.test
+   unset suara_password
+   ```
+
+   Skrip memerlukan minimal 15 karakter dan maksimal 72 byte. Jika
+   emailnya sudah ada, skrip mengganti kredensial sambil menjaga ID akun.
+   Jika mengimpor database pengujian lama, nonaktifkan akun uji termasuk
+   admin demo atau ganti kredensial seluruh akun yang akan dipertahankan
+   sebelum web dibuka untuk publik.
+6. Pendaftaran mandiri tertutup di produksi. Pengelola dapat memverifikasi
+   NIM lewat sumber resmi kampus, lalu membuat akun mahasiswa dengan
+   `scripts/set-account.php mahasiswa NAMA EMAIL NIM` dan kata sandi baru
+   melalui stdin seperti contoh di atas. `SUARA_OPEN_REGISTRATION=1`
+   mengaktifkan pendaftaran mandiri jika memang diinginkan. Mode itu
+   hanya mengecek format dan keunikan data.
+7. Uji login admin dan mahasiswa, visibilitas laporan serta foto,
+   notifikasi lonceng, dan akses direktori privat di hosting. Pastikan
+   cookie sesi bertanda `Secure` dan `HttpOnly`. Login dibatasi lima
+   percobaan per akun dan 60 per IP dalam 15 menit. Sesi berakhir
+   maksimal delapan jam setelah login.
+
+Paket gabungan ini juga mempertahankan validasi input/ID yang ketat,
+pembatasan registrasi 20 percobaan per IP per jam, CSP, pemblokiran
+`.runtime`, metadata Git dan berkas cadangan, serta perbaikan router Windows.
+Simpan sesi dan `SUARA_RATE_LIMIT_DIR` (counter registrasi) di direktori privat
+yang dapat ditulis PHP. Limiter login memakai tabel `login_limits`; semua
+worker perlu menggunakan database yang sama. Untuk beberapa server aplikasi,
+counter registrasi berbasis file juga memerlukan penyimpanan bersama.
+
+Lihat [SECURITY-REVIEW.md](SECURITY-REVIEW.md) untuk hasil pengujian,
+cara mengulangnya, dan batas yang perlu diperiksa di hosting.
 
 ## Checklist pengujian manual
 

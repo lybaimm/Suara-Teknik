@@ -1,13 +1,22 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/security.php';
+
 function connectDatabase(): PDO
 {
     $host = getenv('SUARA_DB_HOST') ?: '127.0.0.1';
     $port = getenv('SUARA_DB_PORT') ?: '3306';
     $name = getenv('SUARA_DB_NAME') ?: 'suara_teknik';
-    $user = getenv('SUARA_DB_USER') ?: 'root';
+    $user = getenv('SUARA_DB_USER') ?: (appIsLocal() ? 'root' : '');
     $password = getenv('SUARA_DB_PASSWORD');
+
+    if (
+        !appIsLocal()
+        && ($user === '' || strtolower($user) === 'root' || $password === false || $password === '')
+    ) {
+        throw new RuntimeException('Konfigurasi database produksi belum lengkap.');
+    }
 
     $db = new PDO(
         "mysql:host=$host;port=$port;dbname=$name;charset=utf8mb4",

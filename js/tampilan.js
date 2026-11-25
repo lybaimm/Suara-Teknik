@@ -52,7 +52,8 @@ function renderHeader(page) {
   }).join('');
   const account = user
     ? '<button type="button" class="btn quiet small" id="logout">Keluar</button>'
-    : button('daftar', 'Daftar', 'quiet small') + button('masuk', 'Masuk', 'primary small');
+    : (registrationOpen ? button('daftar', 'Daftar', 'quiet small') : '')
+      + button('masuk', 'Masuk', 'primary small');
 
   header.innerHTML = `
     <a class="brand" href="#beranda">
@@ -207,6 +208,14 @@ function screen(title, description, body, settings = {}) {
 }
 
 function auth(register) {
+  if (register && !registrationOpen) {
+    return screen(
+      'Pendaftaran mandiri ditutup',
+      'Hubungi pengelola Suara Teknik untuk mendapat akun mahasiswa.',
+      button('masuk', 'Masuk', 'primary'),
+      { narrow: true, back: ['beranda', 'Beranda'] }
+    );
+  }
   const title = register ? 'Daftar akun' : 'Masuk ke Suara Teknik';
   const description = register
     ? 'Buat akun untuk menyampaikan aspirasi dan pengaduan.'
@@ -232,14 +241,15 @@ function auth(register) {
         </label>`}
         <label>Kata sandi
           <input name="password" type="password" required
-            minlength="6" placeholder="Minimal 6 karakter">
+            minlength="${passwordMinimum}" placeholder="Minimal ${passwordMinimum} karakter">
         </label>
         <p id="auth-error" class="alert" role="alert" hidden></p>
         <div class="actions">
           <button class="btn primary">${register ? 'Buat akun' : 'Masuk'} ${icon.arrow}</button>
-          <a class="text-link" href="#${nextPage}">
-            ${register ? 'Sudah punya akun?' : 'Daftar akun'}
-          </a>
+          ${register || registrationOpen ? `
+            <a class="text-link" href="#${nextPage}">
+              ${register ? 'Sudah punya akun?' : 'Daftar akun'}
+            </a>` : ''}
         </div>
       </form>
     </div>`, { narrow: true, back: ['beranda', 'Beranda'] });

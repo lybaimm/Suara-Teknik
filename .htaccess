@@ -1,0 +1,24 @@
+Options -Indexes
+LimitRequestBody 4227072
+
+# Protect data, session files, source-control metadata and CLI utilities.
+<If "%{REQUEST_URI} =~ m#(?i)(?:^|/)(?:\.git|\.svn|\.hg|\.runtime|private|database|scripts|tests|vendor)(?:/|$)#">
+  Require all denied
+</If>
+<FilesMatch "(?i)(^\.|\.(sql|ini|log|bak|backup|old|orig|save|swp|ps1)$)">
+  Require all denied
+</FilesMatch>
+
+<IfModule mod_headers.c>
+  Header always unset X-Powered-By
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "DENY"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"
+  Header always set Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'"
+</IfModule>
+<IfModule php_module>
+  php_flag display_errors Off
+  php_flag log_errors On
+  php_value post_max_size 5M
+</IfModule>

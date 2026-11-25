@@ -3,6 +3,8 @@
 let reports = [];
 let events = [];
 let user = null;
+let registrationOpen = false;
+let passwordMinimum = 6;
 let csrf = '';
 let notifications = [];
 let requestInProgress = false;
@@ -32,6 +34,8 @@ async function api(action, data = {}) {
   }
 
   user = state.user;
+  registrationOpen = state.registrationOpen === true;
+  passwordMinimum = state.passwordMinimum || 6;
   reports = state.reports;
   events = state.events || [];
   csrf = state.csrf;

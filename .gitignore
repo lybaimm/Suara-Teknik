@@ -6,3 +6,12 @@
 /.env.*
 *.log
 /akun-login.txt
+
+# Ekspor data dan paket lokal
+*.sql
+!/database/suara_teknik.sql
+*.sql.gz
+*.zip
+/backups/
+
+node_modules/

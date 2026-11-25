@@ -36,10 +36,8 @@ function manageAgenda(PDO $db, array $user, array $input, string $action): void
 {
     $id = null;
     if ($action !== 'event-create') {
-        $id = filter_var($input['id'] ?? null, FILTER_VALIDATE_INT, [
-            'options' => ['min_range' => 1],
-        ]);
-        if (!$id || !runQuery($db, '
+        $id = positiveId($input['id'] ?? null);
+        if (!runQuery($db, '
             SELECT id FROM events WHERE id = ? AND type = ? FOR UPDATE
         ', [$id, FORUM_AGENDA])->fetchColumn()) {
             fail(404, 'Agenda tidak ditemukan.');

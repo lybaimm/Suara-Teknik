@@ -1,5 +1,18 @@
 # Skenario pengujian Suara Teknik
 
+## Validasi dan kontrol akses — 25 November 2026
+
+Suite pada `tests/security-audit.cjs` lulus 25/25 kelompok skenario di
+database uji terpisah. Cakupan meliputi duplikasi email/NIM, tipe input/ID,
+hak akses antarperan dan akun, SQL injection, CSRF, stored XSS, foto,
+agenda, sesi, berkas privat, serta pembatasan login/registrasi.
+Pemeriksaan Apache menolak delapan path sensitif; halaman, API dan logo
+tetap tersedia. Suite diulang setelah penggabungan ZIP hosting dan tetap
+lulus 25/25. Uji tambahan memeriksa akun CLI, NIM duplikat, kebijakan
+production, HTTPS/header proxy, serta sesi kedaluwarsa delapan jam.
+Skema instalasi tidak membuat akun bawaan. Lihat `SECURITY-REVIEW.md` untuk hasil,
+cara mengulang pengujian, dan batas sebelum deploy.
+
 ## Fade in dan fokus kolom akun
 
 Fade in diperiksa pada 16 halaman publik, mahasiswa, dan admin untuk

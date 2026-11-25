@@ -1,0 +1,6 @@
+{
+  "name": "suara-teknik-security-tests",
+  "private": true,
+  "scripts": { "test": "node security-audit.cjs" },
+  "devDependencies": { "playwright": "1.65.1" }
+}
