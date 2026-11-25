@@ -1,5 +1,52 @@
 # Skenario pengujian Suara Teknik
 
+## Beranda dan transisi terbaru — 26 November 2026
+
+Judul beranda muncul dari bawah melalui mask per baris. Deskripsi memakai
+efek mengetik dengan fade tiap huruf dan posisi teks tetap. Preferensi
+pengurangan gerak menampilkan teks lengkap tanpa menunggu animasi.
+Foto FT sejajar dengan tinggi area teks pada desktop; susunan mobile tetap
+bertumpuk. Bagian pilihan Aspirasi/Pengaduan berada di bawah layar pertama.
+Pemeriksaan tinggi/alignment lulus pada 320×740, 390×844, 768×1024,
+1366×768, 1366×900 dan 1920×1080.
+
+Perpindahan halaman memakai fade keluar 150 ms dan masuk 380 ms, termasuk
+pengujian klik cepat dan Back. Angka dashboard/forum menghitung dari nol
+selama 500 ms. Label status memiliki warna solid; Telah Dibahas memakai teal.
+Foto FT dan tombol terangkat saat hover; Daftar/Masuk dikecualikan.
+
+## Tampilan mahasiswa dan admin seragam — 26 November 2026
+
+Dashboard kedua peran memakai warna banner, susunan kartu, penanda menu,
+animasi angka, hover dan transisi yang sama. Menu mahasiswa terdiri atas
+Ringkasan, Riwayat Laporan, Forum Advokasi dan Agenda. Riwayat mahasiswa
+memakai pagination yang sama; Forum hanya mengelompokkan laporan miliknya.
+
+Chrome pada 320, 390, 768 dan 1366 piksel memeriksa kesamaan style dashboard,
+empat menu, riwayat/forum/agenda, batas halaman, data per akun dan overflow.
+Mahasiswa tetap tidak melihat formulir tindak lanjut atau tombol kelola agenda.
+API menolak tindakan admin dengan HTTP 403 dan foto akun lain dengan 404.
+Animasi angka mahasiswa juga diperiksa. Tidak ada perubahan API/hak akses.
+
+## Forum Advokasi ringkas — 26 November 2026
+
+Forum menggunakan kartu per periode, berbeda dari daftar Manajemen Laporan.
+Periode terbaru dipilih saat halaman dibuka. Kartu hanya menampilkan judul,
+status, ringkasan hasil dan tautan detail; enam kartu per halaman pada desktop
+dan tiga pada layar hingga 780 piksel. Ringkasan angka tetap mencakup semua
+laporan forum dan menghitung dari nol saat halaman dibuka.
+
+Pemeriksaan Chrome pada 320, 390, 768 dan 1366 piksel lulus untuk periode
+bawaan, semua 19 laporan yang dapat dicapai melalui pagination, periode lama,
+pencarian/status, kondisi kosong, tautan detail, reset halaman saat filter
+atau ukuran layar berubah, fokus setelah pagination, dan overflow horizontal.
+Manajemen Laporan juga dibatasi enam laporan per halaman desktop dan tiga
+pada layar hingga 780 piksel. Semua 27 laporan dapat dicapai melalui
+pagination; filter/pencarian, detail, kondisi kosong dan reset saat ukuran
+layar berubah telah diperiksa pada keempat ukuran. Riwayat mahasiswa kemudian
+diseragamkan pagination-nya sesuai bagian di atas. Pengujian ini membaca
+data lokal tanpa mengubah laporan atau jadwal.
+
 ## Validasi dan kontrol akses — 25 November 2026
 
 Suite pada `tests/security-audit.cjs` lulus 25/25 kelompok skenario di

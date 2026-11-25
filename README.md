@@ -38,6 +38,12 @@ menampilkan riwayat tindak lanjut agar prosesnya mudah dipantau.
 
 ## Teknologi dan struktur
 
+Dashboard mahasiswa dan admin berbagi tata letak, navigasi empat menu dan
+animasi. Menu mahasiswa tetap berisi Ringkasan, Riwayat Laporan, Forum
+Advokasi dan Agenda; seluruh angka, riwayat dan pembahasan forum mahasiswa
+hanya berasal dari laporannya sendiri. Pengaturan laporan dan agenda admin
+tetap dibatasi oleh peran di server.
+
 Antarmuka memakai HTML, CSS, dan JavaScript. PHP 8.0+ dengan ekstensi
 `pdo_mysql` dan `mbstring` menjalankan API serta sesi login. MySQL atau
 MariaDB menyimpan akun, laporan, foto, riwayat status, tanggapan admin, dan agenda.

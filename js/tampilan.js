@@ -26,6 +26,7 @@ const homeLinks = [
 const memberLinks = [
   ['dashboard', 'Ringkasan'],
   ['riwayat', 'Riwayat Laporan'],
+  ['forum', 'Forum Advokasi'],
   ['agenda', 'Agenda'],
 ];
 const adminLinks = [
@@ -97,14 +98,20 @@ function home() {
   const admin = user?.role === 'admin';
   const start = user ? (admin ? 'kelola' : 'buat') : 'masuk';
   const action = button(start, admin ? 'Lihat laporan' : 'Buat laporan', 'primary', true);
+  const introduction = 'Satu tempat untuk menyampaikan gagasan, melaporkan kendala, dan melihat bagaimana setiap suara ditindaklanjuti.';
   return `
     <div class="wrap">
       <section class="hero" aria-labelledby="hero-title">
         <div class="hero-copy">
-          <h1 id="hero-title">Suarakan ide,<br><span>Wujudkan</span><br>perubahan.</h1>
-          <p class="intro">
-            Satu tempat untuk menyampaikan gagasan, melaporkan kendala,
-            dan melihat bagaimana setiap suara ditindaklanjuti.
+          <h1 id="hero-title" aria-label="Suarakan ide, Wujudkan perubahan.">
+            <span class="hero-title-line"><span class="hero-title-word">Suarakan ide,</span></span>
+            <span class="hero-title-line"><span class="hero-title-word hero-title-accent">Wujudkan</span></span>
+            <span class="hero-title-line"><span class="hero-title-word">perubahan.</span></span>
+          </h1>
+          <p class="intro hero-description">
+            <span class="hero-description-reserve" aria-hidden="true">${introduction}</span>
+            <span class="hero-description-typed" aria-hidden="true">${introduction}</span>
+            <span class="hero-description-copy">${introduction}</span>
           </p>
           <div class="actions">
             ${action}
@@ -298,7 +305,7 @@ function dashboard() {
   ];
   const summary = counts.map(([label, count]) => `
     <div class="stat">
-      <strong>${count}</strong>
+      <strong data-count-target="${count}">${count}</strong>
       <span>${label}</span>
     </div>`).join('');
   const title = admin ? 'Dashboard admin' : `Halo, ${escapeHTML(user.name)}.`;
@@ -311,7 +318,7 @@ function dashboard() {
 
   return screen(title, description, `
     <div class="stats">${summary}</div>
-    <section class="panel forum-info"><h2>Forum Advokasi</h2><p>Forum bersama pihak fakultas dilaksanakan dua kali dalam satu tahun. Periode dan informasi jadwal laporannya dapat dilihat pada tanggapan admin.</p>${admin ? button('forum','Lihat laporan forum','quiet') : button('riwayat','Pantau aspirasi saya','quiet')}</section>
+    <section class="panel forum-info"><h2>Forum Advokasi</h2><p>Forum bersama pihak fakultas dilaksanakan dua kali dalam satu tahun. Periode dan informasi jadwal laporannya dapat dilihat pada tanggapan admin.</p>${admin ? button('forum','Lihat laporan forum','quiet') : button('forum','Pantau aspirasi saya','quiet')}</section>
     <section class="report-panel" aria-label="Laporan terbaru">
       <div class="section-head">
         <h2>Laporan terbaru</h2>
@@ -323,12 +330,111 @@ function dashboard() {
     </section>`, { variant: admin ? 'dashboard admin' : 'dashboard', action });
 }
 
-function reportHistory(admin, kind = '', forumOnly = false) {
-  const title = forumOnly ? 'Laporan Forum Advokasi' : admin ? 'Manajemen laporan' : 'Riwayat laporan';
+let forumPageIndex = 0;
+let managementPageIndex = 0;
+const reportPageQuery = matchMedia('(max-width: 780px)');
+
+function reportPagination(pageIndex, pageCount, scope) {
+  const label = scope === 'forum' ? 'forum' : 'laporan';
+  return `<nav class="list-pagination" aria-label="Halaman ${label}"><p>Halaman ${pageIndex + 1} dari ${pageCount}</p><div><button type="button" class="btn quiet small" data-${scope}-step="-1" aria-label="Halaman ${label} sebelumnya" ${pageIndex === 0 ? 'disabled' : ''}>← Sebelumnya</button><button type="button" class="btn quiet small" data-${scope}-step="1" aria-label="Halaman ${label} berikutnya" ${pageIndex === pageCount - 1 ? 'disabled' : ''}>Berikutnya →</button></div></nav>`;
+}
+
+function managementListing(data) {
+  if (!data.length) {
+    managementPageIndex = 0;
+    return `<div class="report-panel">${listing(data)}</div>`;
+  }
+  const pageSize = reportPageQuery.matches ? 3 : 6;
+  const pageCount = Math.ceil(data.length / pageSize);
+  managementPageIndex = Math.max(0, Math.min(managementPageIndex, pageCount - 1));
+  const start = managementPageIndex * pageSize;
+  const shown = data.slice(start, start + pageSize);
+  return `<p class="report-result-summary" tabindex="-1">Menampilkan ${start + 1}–${start + shown.length} dari ${data.length} laporan</p><div class="report-panel">${listing(shown)}</div>`
+    + reportPagination(managementPageIndex, pageCount, 'report');
+}
+
+function forumPeriodCompare(a, b) {
+  if (!a) return b ? 1 : 0;
+  if (!b) return -1;
+  const rank = period => {
+    const match = /^(I|II) - (\d{4})$/.exec(period);
+    return match ? Number(match[2]) * 2 + (match[1] === 'II' ? 1 : 0) : 0;
+  };
+  return rank(b) - rank(a) || a.localeCompare(b, 'id');
+}
+
+function forumListing(data) {
+  if (!data.length) {
+    forumPageIndex = 0;
+    return '<div class="forum-empty"><h2>Belum ada pembahasan yang cocok</h2><p>Ubah pencarian atau pilihan filter untuk melihat laporan forum lainnya.</p></div>';
+  }
+  const pageSize = reportPageQuery.matches ? 3 : 6;
+  const pageCount = Math.ceil(data.length / pageSize);
+  forumPageIndex = Math.max(0, Math.min(forumPageIndex, pageCount - 1));
+  const start = forumPageIndex * pageSize;
+  const ordered = [...data].sort((a, b) => forumPeriodCompare(a.forumPeriod || '', b.forumPeriod || ''));
+  const shown = ordered.slice(start, start + pageSize);
+  const groups = new Map();
+  for (const report of shown) {
+    const period = report.forumPeriod || '';
+    if (!groups.has(period)) groups.set(period, []);
+    groups.get(period).push(report);
+  }
+  return `<p class="forum-result-summary" tabindex="-1">Menampilkan ${start + 1}–${start + shown.length} dari ${data.length} laporan</p>`
+    + [...groups.keys()].sort(forumPeriodCompare).map(period => {
+      const items = groups.get(period);
+      const periodItems = data.filter(report => (report.forumPeriod || '') === period);
+      const completed = periodItems.filter(report => report.status === 'Selesai').length;
+      return `<section class="forum-period" aria-label="${escapeHTML(period ? 'Periode ' + period : 'Periode belum ditentukan')}">
+        <header class="forum-period-heading"><div><p class="forum-kicker">Periode pembahasan</p><h2>${escapeHTML(period || 'Belum ditentukan')}</h2></div><p>${periodItems.length} laporan <span aria-hidden="true">·</span> ${completed} selesai</p></header>
+        <div class="forum-card-grid">${items.map(report => `
+          <article class="forum-report-card">
+            <div class="forum-card-meta"><span>${escapeHTML(report.id)} · ${escapeHTML(report.type)}</span>${badge(report.status)}</div>
+            <h3>${escapeHTML(report.title)}</h3>
+            <div class="forum-card-result${report.forumResult ? ' has-result' : ''}"><h4>Hasil pembahasan</h4><p class="forum-copy">${escapeHTML(report.forumResult || (report.status === 'Menunggu Forum Advokasi' ? 'Menunggu pembahasan bersama pihak fakultas.' : 'Belum ada hasil pembahasan yang dicatat.'))}</p></div>
+            <a class="text-link forum-card-link" href="#laporan/${escapeHTML(report.id)}" aria-label="Lihat pembahasan ${escapeHTML(report.title)}">Lihat pembahasan ${icon.arrow}</a>
+          </article>`).join('')}</div>
+      </section>`;
+    }).join('')
+    + reportPagination(forumPageIndex, pageCount, 'forum');
+}
+
+function forumAdvocacyPage() {
+  const data = visibleReports().filter(report => report.method === 'forum');
+  const periods = [...new Set(data.map(report => report.forumPeriod).filter(Boolean))].sort(forumPeriodCompare);
+  const latestPeriod = periods[0] || '';
+  const current = latestPeriod ? data.filter(report => report.forumPeriod === latestPeriod) : data;
+  forumPageIndex = 0;
+  const metrics = [
+    ['Laporan forum', data.length],
+    ['Menunggu forum', data.filter(report => report.status === 'Menunggu Forum Advokasi').length],
+    ['Dalam tindak lanjut', data.filter(report => ['Telah Dibahas', 'Sedang Diproses'].includes(report.status)).length],
+    ['Selesai', data.filter(report => report.status === 'Selesai').length],
+  ];
+  const description = user.role === 'admin'
+    ? 'Ruang pembahasan aspirasi mahasiswa bersama pihak fakultas.'
+    : 'Pantau pembahasan dan hasil tindak lanjut aspirasi milikmu.';
+  return screen('Forum Advokasi', description, `
+    <section class="forum-overview" aria-label="Ringkasan forum">
+      <div class="forum-overview-intro"><h2>Pantau pembahasan dan tindak lanjutnya.</h2></div>
+      <div class="forum-metrics">${metrics.map(([label, count]) => `<div><strong data-count-target="${count}">${count}</strong><span>${label}</span></div>`).join('')}</div>
+    </section>
+    <div class="filters forum-filters">
+      <label>Cari pembahasan<input id="search" type="search" placeholder="Topik, nomor, atau hasil pembahasan"></label>
+      <label>Periode forum<select id="filter-period"><option value="">Semua periode</option>${options(periods, latestPeriod)}</select></label>
+      <label>Status<select id="filter-status"><option value="">Semua status</option>${options([5, 6, 2, 3, 4].map(index => statuses[index]))}</select></label>
+      <label>Kategori<select id="filter-category"><option value="">Semua kategori</option>${options(categories)}</select></label>
+    </div>
+    <div id="results" class="forum-results" aria-live="polite">${forumListing(current)}</div>`, { variant: 'forum-workspace' });
+}
+
+function reportHistory(admin, kind = '') {
+  managementPageIndex = 0;
+  const title = admin ? 'Manajemen laporan' : 'Riwayat laporan';
   const description = admin
     ? 'Cari laporan atau saring berdasarkan kategori dan status.'
     : 'Buka laporan untuk melihat perkembangan dan tanggapan admin.';
-  const data = visibleReports().filter(report => (!kind || report.type.toLowerCase() === kind) && (!forumOnly || report.method === 'forum'));
+  const data = visibleReports().filter(report => !kind || report.type.toLowerCase() === kind);
 
   return screen(title, description, `
     <div class="filters">
@@ -344,26 +450,21 @@ function reportHistory(admin, kind = '', forumOnly = false) {
       <label>Status
         <select id="filter-status">
           <option value="">Semua status</option>
-          ${options(forumOnly ? [5, 6, 2, 3, 4].map(index => statuses[index]) : statuses)}
+          ${options(statuses)}
         </select>
       </label>
     </div>
     <div class="filters extra-filters">
-      ${forumOnly ? `<label>Periode forum
-        <select id="filter-period">
-          <option value="">Semua periode</option>
-          ${options([...new Set(data.map(report => report.forumPeriod).filter(Boolean))].sort())}
-        </select>
-      </label>` : `<label>Metode penyelesaian
+      <label>Metode penyelesaian
         <select id="filter-method">
           <option value="">Semua metode</option>
           <option value="direct">Penanganan langsung</option>
           <option value="forum">Forum Advokasi</option>
           <option value="pending">Belum ditentukan</option>
         </select>
-      </label>`}
+      </label>
     </div>
-    <div id="results" class="report-panel" aria-live="polite">${listing(data)}</div>`,
+    <div id="results" class="management-results" aria-live="polite">${managementListing(data)}</div>`,
     { action: admin ? '' : button('buat', 'Buat laporan', 'primary', true) });
 }
 

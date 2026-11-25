@@ -13,9 +13,15 @@ let pendingType = '';
 let activeView = '';
 let homeRole;
 let screenAnimation;
+let exitAnimation;
+let viewTransitionVersion = 0;
 let homeNavFrame = 0;
 let homeNavTarget = null;
 let homeRevealObserver;
+let heroTitleObserver;
+let heroTypingFrame = 0;
+let dashboardCountFrame = 0;
+let reportResizeCleanup;
 const revealedHomeSections = new Set();
 
 history.scrollRestoration = 'manual';
@@ -35,8 +41,8 @@ function go(path) {
   render({ navigating: true });
 }
 
-function scrollHome(page, navigating) {
-  const behavior = navigating && !reducedMotion.matches ? 'smooth' : 'instant';
+function scrollHome(page, navigating, instant = false) {
+  const behavior = navigating && !instant && !reducedMotion.matches ? 'smooth' : 'instant';
   homeNavTarget = null;
   if (page === 'beranda') {
     if (navigating) homeNavTarget = { page, top: 0, arrived: false };
@@ -102,7 +108,7 @@ function releaseHomeNavTarget() {
   queueHomeNavUpdate();
 }
 
-function revealHomeSections() {
+function revealHomeSections({ skipVisible = false } = {}) {
   homeRevealObserver?.disconnect();
   if (reducedMotion.matches || !('IntersectionObserver' in window)) return;
 
@@ -122,8 +128,89 @@ function revealHomeSections() {
   }, { rootMargin: '0px 0px -24px 0px', threshold: 0 });
 
   for (const section of main.querySelectorAll('.hero, .start, #agenda-home, #alur, #tentang')) {
+    const bounds = section.getBoundingClientRect();
+    if (skipVisible && bounds.top < innerHeight && bounds.bottom > 0) {
+      revealedHomeSections.add(section.id || section.className);
+      continue;
+    }
     homeRevealObserver.observe(section);
   }
+}
+
+function revealHeroTitle() {
+  heroTitleObserver?.disconnect();
+  const title = document.getElementById('hero-title');
+  if (!title || reducedMotion.matches) return;
+  const typed = main.querySelector('.hero-description-typed');
+  const fullText = main.querySelector('.hero-description-copy')?.textContent || '';
+  if (typed) typed.textContent = '';
+  title.classList.add('hero-title-pending');
+  const show = () => {
+    title.classList.remove('hero-title-pending');
+    title.classList.add('hero-title-revealing');
+    heroTitleObserver?.disconnect();
+    if (typed) typeHeroDescription(typed, fullText);
+  };
+  const bounds = title.getBoundingClientRect();
+  if ((bounds.top < innerHeight && bounds.bottom > 0) || !('IntersectionObserver' in window)) {
+    show();
+    return;
+  }
+  heroTitleObserver = new IntersectionObserver(entries => {
+    if (entries.some(entry => entry.isIntersecting)) show();
+  }, { rootMargin: '0px 0px -24px 0px' });
+  heroTitleObserver.observe(title);
+}
+
+function typeHeroDescription(element, text) {
+  cancelAnimationFrame(heroTypingFrame);
+  const fragment = document.createDocumentFragment();
+  const letters = Array.from(text, letter => {
+    const span = document.createElement('span');
+    span.className = 'hero-type-letter';
+    span.textContent = letter;
+    fragment.append(span);
+    return span;
+  });
+  element.replaceChildren(fragment);
+  const start = performance.now() + 650;
+  const stagger = 12;
+  const fade = 140;
+  const complete = new Set();
+  function tick(now) {
+    if (!element.isConnected) { heroTypingFrame = 0; return; }
+    if (reducedMotion.matches) {
+      element.textContent = text;
+      heroTypingFrame = 0;
+      return;
+    }
+    letters.forEach((letter, index) => {
+      if (complete.has(index)) return;
+      const progress = Math.max(0, Math.min(1, (now - start - index * stagger) / fade));
+      if (progress > 0) letter.style.opacity = String(1 - (1 - progress) ** 2);
+      if (progress === 1) complete.add(index);
+    });
+    heroTypingFrame = complete.size < letters.length ? requestAnimationFrame(tick) : 0;
+  }
+  heroTypingFrame = requestAnimationFrame(tick);
+}
+
+function animateDashboardCounts({ delay = 140 } = {}) {
+  if (reducedMotion.matches) return;
+  const counters = [...main.querySelectorAll('[data-count-target]')];
+  if (!counters.length) return;
+  const targets = counters.map(counter => Number(counter.dataset.countTarget));
+  counters.forEach(counter => { counter.textContent = '0'; });
+  const start = performance.now() + delay;
+  function tick(now) {
+    const progress = Math.max(0, Math.min(1, (now - start) / 500));
+    const eased = 1 - (1 - progress) ** 2;
+    counters.forEach((counter, index) => {
+      counter.textContent = String(Math.floor(targets[index] * eased));
+    });
+    dashboardCountFrame = progress < 1 ? requestAnimationFrame(tick) : 0;
+  }
+  dashboardCountFrame = requestAnimationFrame(tick);
 }
 
 function afterLogin() {
@@ -156,12 +243,17 @@ function wireAuth(page) {
 }
 
 function wireFilters(kind, forumOnly = false) {
+  reportResizeCleanup?.();
+  reportResizeCleanup = null;
   const results = document.getElementById('results');
   if (!results) return;
+  const management = results.classList.contains('management-results');
   const fields = ['search', 'filter-category', 'filter-status', 'filter-method', 'filter-period']
     .map(id => document.getElementById(id));
 
-  function update() {
+  function update(resetPage = true) {
+    if (forumOnly && resetPage) forumPageIndex = 0;
+    if (management && resetPage) managementPageIndex = 0;
     const [query, category, status, method, period] = fields.map(field => field?.value || '');
     const normalized = query.trim().toLowerCase();
     const matches = visibleReports().filter(report =>
@@ -171,12 +263,29 @@ function wireFilters(kind, forumOnly = false) {
       (!forumOnly || report.method === 'forum') &&
       (!method || (report.method || 'pending') === method) &&
       (!period || report.forumPeriod === period) &&
-      `${report.title} ${report.id}`.toLowerCase().includes(normalized)
+      `${report.title} ${report.id}${forumOnly ? ' ' + report.description + ' ' + (report.forumResult || '') : ''}`.toLowerCase().includes(normalized)
     );
-    results.innerHTML = listing(matches);
+    results.innerHTML = forumOnly ? forumListing(matches) : management ? managementListing(matches) : listing(matches);
   }
 
-  fields.forEach(field => field?.addEventListener('input', update));
+  fields.forEach(field => field?.addEventListener('input', () => update()));
+  if (forumOnly || management) {
+    const scope = forumOnly ? 'forum' : 'report';
+    results.addEventListener('click', event => {
+      const button = event.target.closest(`[data-${scope}-step]`);
+      if (!button || button.disabled) return;
+      const step = Number(button.getAttribute(`data-${scope}-step`));
+      if (step !== -1 && step !== 1) return;
+      if (forumOnly) forumPageIndex += step;
+      else managementPageIndex += step;
+      update(false);
+      results.querySelector('.forum-result-summary, .report-result-summary')?.focus({ preventScroll: true });
+      results.scrollIntoView({ behavior: reducedMotion.matches ? 'instant' : 'smooth', block: 'start' });
+    });
+    const onResize = () => update();
+    reportPageQuery.addEventListener('change', onResize);
+    reportResizeCleanup = () => reportPageQuery.removeEventListener('change', onResize);
+  }
 }
 
 function wireReport(report) {
@@ -297,7 +406,13 @@ function wireDetail(report) {
   });
 }
 
-function render({ navigating = false } = {}) {
+function render({ navigating = false, afterExit = false } = {}) {
+  if (!afterExit) {
+    viewTransitionVersion++;
+    exitAnimation?.cancel();
+    exitAnimation = null;
+  }
+  main.inert = false;
   const [route = 'beranda', part = ''] = (location.hash.slice(1) || 'beranda').split('/');
   const page = routes.includes(route) ? route : 'beranda';
   const kind = ['aspirasi', 'pengaduan'].includes(part) ? part : '';
@@ -322,6 +437,28 @@ function render({ navigating = false } = {}) {
 
   const nextView = onHome ? 'home' : page + '/' + part;
   const changedView = activeView !== nextView;
+  if (navigating && changedView && activeView && !afterExit && !reducedMotion.matches) {
+    const version = viewTransitionVersion;
+    const opacity = getComputedStyle(main).opacity;
+    const transform = getComputedStyle(main).transform;
+    screenAnimation?.cancel();
+    cancelAnimationFrame(dashboardCountFrame);
+    dashboardCountFrame = 0;
+    homeRevealObserver?.disconnect();
+    main.inert = true;
+    const leaving = main.animate([
+      { opacity, transform },
+      { opacity: 0, transform: 'translateY(-6px)' },
+    ], { duration: 150, easing: 'ease-in', fill: 'forwards' });
+    exitAnimation = leaving;
+    leaving.finished.then(() => {
+      if (version !== viewTransitionVersion) return;
+      leaving.cancel();
+      exitAnimation = null;
+      render({ navigating: true, afterExit: true });
+    }).catch(() => {});
+    return;
+  }
   activeView = nextView;
   homeRole = user?.role;
   renderHeader(page);
@@ -345,7 +482,7 @@ function render({ navigating = false } = {}) {
   if (page === 'riwayat' && student || page === 'kelola' && user?.role === 'admin') {
     content = reportHistory(page === 'kelola', kind);
   }
-  if (page === 'forum' && user?.role === 'admin') content = reportHistory(true, '', true);
+  if (page === 'forum' && user) content = forumAdvocacyPage();
   if (page === 'buat' && student) content = reportForm(null, kind);
   if (page === 'laporan' || page === 'edit') {
     report = visibleReports().find(item => item.id === part);
@@ -355,6 +492,10 @@ function render({ navigating = false } = {}) {
     }
   }
 
+  cancelAnimationFrame(dashboardCountFrame);
+  dashboardCountFrame = 0;
+  cancelAnimationFrame(heroTypingFrame);
+  heroTypingFrame = 0;
   main.innerHTML = content || screen(
     'Halaman tidak tersedia',
     'Periksa kembali pilihanmu atau buka dashboard.',
@@ -366,23 +507,28 @@ function render({ navigating = false } = {}) {
   if (page === 'laporan') wireDetail(report);
   if (page === 'buat' || page === 'edit') wireReport(report);
 
-  screenAnimation?.cancel();
+  if (changedView) screenAnimation?.cancel();
   homeRevealObserver?.disconnect();
+  heroTitleObserver?.disconnect();
   if (onHome) {
-    scrollHome(page, navigating);
-    revealHomeSections();
+    scrollHome(page, navigating, changedView);
+    revealHomeSections({ skipVisible: changedView });
+    revealHeroTitle();
   } else if (changedView) {
     window.scrollTo({ top: 0, behavior: 'instant' });
     if (navigating) main.focus({ preventScroll: true });
   }
-  if (!onHome && changedView && !reducedMotion.matches) {
-    screenAnimation = main.firstElementChild.animate(
+  if (changedView && !reducedMotion.matches) {
+    screenAnimation = main.animate(
       [
-        { opacity: 0 },
-        { opacity: 1 },
+        { opacity: 0, transform: afterExit ? 'translateY(8px)' : 'none' },
+        { opacity: 1, transform: 'none' },
       ],
-      { duration: 500, easing: 'cubic-bezier(.2,.65,.35,1)' }
+      { delay: afterExit ? 0 : 140, duration: afterExit ? 380 : 600, fill: 'backwards', easing: 'cubic-bezier(.2,.65,.35,1)' }
     );
+  }
+  if (['dashboard', 'forum'].includes(page) && user && changedView) {
+    animateDashboardCounts({ delay: afterExit ? 0 : 140 });
   }
 }
 
@@ -407,7 +553,7 @@ async function start() {
   }
   render();
   if (!reducedMotion.matches) {
-    header.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 500, easing: 'ease-out' });
+    header.animate([{ opacity: 0 }, { opacity: 1 }], { delay: 140, duration: 600, fill: 'backwards', easing: 'ease-out' });
   }
   startNotificationPolling();
   window.addEventListener('hashchange', () => render({ navigating: true }));
