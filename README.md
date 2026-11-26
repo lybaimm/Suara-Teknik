@@ -102,6 +102,21 @@ UPDATE users SET role = 'admin' WHERE email = 'email-admin@example.test';
 Admin masuk dengan email. Mahasiswa masuk dengan NIM. Untuk menguji
 aturan produksi dari lokal, ikuti bagian Deploy ke server publik.
 
+#### Menggunakan paket XAMPP dari Meydina
+
+Paket tim `Suara_Teknik_Teman_3_Admin_XAMPP.zip` memakai skema yang sama
+dan menambahkan tiga akun admin uji untuk Baim, Nova, dan Meydina. Untuk
+instalasi lokal baru dari paket tersebut, impor SQL yang ada di dalam
+ZIP, lalu masuk dengan email dan kata sandi yang dibagikan oleh tim.
+
+Jika aplikasi lokal sudah punya akun atau laporan, cek nama database
+yang dipakai aplikasi (`SUARA_DB_NAME`, atau `suara_teknik` bila tidak
+diatur). Tambahkan akun ke database itu agar data yang ada tetap tersedia.
+Perintah `php scripts/set-account.php admin NAMA EMAIL` dapat membuat
+akun dengan kata sandi baru melalui stdin. Simpan paket uji secara
+privat. Untuk hosting, ikuti langkah Deploy dan buat kata sandi baru
+untuk tiap admin.
+
 ### Gambar pendukung untuk laporan contoh
 
 Folder `database/report-images/` berisi enam gambar objek realistis tanpa
