@@ -1,13 +1,35 @@
 @font-face {
-  font-family: ST;
-  src: url(../assets/suara-regular.woff2) format("woff2");
+  font-family: "Poppins";
+  src: url("../assets/Poppins-Light.ttf") format("truetype");
+  font-weight: 300;
   font-display: swap;
 }
 
 @font-face {
-  font-family: ST;
-  src: url(../assets/suara-semibold.woff2) format("woff2");
-  font-weight: 650;
+  font-family: "Poppins";
+  src: url("../assets/Poppins-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Poppins";
+  src: url("../assets/Poppins-Medium.ttf") format("truetype");
+  font-weight: 500;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Poppins";
+  src: url("../assets/Poppins-SemiBold.ttf") format("truetype");
+  font-weight: 600;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Poppins";
+  src: url("../assets/Poppins-Bold.ttf") format("truetype");
+  font-weight: 700;
   font-display: swap;
 }
 
@@ -20,7 +42,7 @@
   --sky: #e8f1ff;
   --mist: #edf4fa;
   --white: #ffffff;
-  --sans: ST, system-ui, sans-serif;
+  --sans: "Poppins", system-ui, sans-serif;
 }
 
 * {
@@ -96,7 +118,7 @@ button {
   gap: 11px;
   font-size: 19px;
   letter-spacing: -.02em;
-  font-weight: 650;
+  font-weight: 600;
 }
 
 .mark {
@@ -135,7 +157,7 @@ nav a {
 }
 
 nav a.active {
-  font-weight: 650;
+  font-weight: 600;
   color: var(--ink);
   text-decoration: none;
 }
@@ -176,7 +198,7 @@ nav a.active {
   color: var(--white);
   text-decoration: none;
   font-size: 14px;
-  font-weight: 650;
+  font-weight: 600;
   line-height: 1.25;
 }
 
@@ -232,7 +254,7 @@ nav a.active {
   font-size: 11px;
   letter-spacing: .12em;
   text-transform: uppercase;
-  font-weight: 650;
+  font-weight: 600;
   margin: 0 0 21px;
   display: flex;
   align-items: center;
@@ -256,15 +278,16 @@ p {
 h1,
 h2,
 h3 {
-  font-weight: 650;
+  font-weight: 600;
   line-height: 1.22;
   letter-spacing: -.025em;
 }
 
 .hero h1 {
   font-size: clamp(40px, 4.65vw, 65px);
+  font-weight: 500;
   line-height: 1.12;
-  letter-spacing: -.045em;
+  letter-spacing: -.025em;
 }
 
 .hero h1 .hero-title-accent {
@@ -302,7 +325,10 @@ h3 {
   line-height: 1.65;
 }
 
-.hero-description { display: grid; }
+.hero-description {
+  display: grid;
+  font-weight: 300;
+}
 .hero-description-reserve, .hero-description-typed { grid-area: 1 / 1; min-width: 0; }
 .hero-description-reserve { visibility: hidden; }
 .hero-type-letter { opacity: 0; }
@@ -320,7 +346,7 @@ h3 {
   align-items: center;
   gap: 7px;
   font-size: 14px;
-  font-weight: 650;
+  font-weight: 600;
   text-decoration: none;
   border: 0;
   background: none;
@@ -360,7 +386,7 @@ h3 {
   background: white;
   color: var(--ink);
   font-size: 12px;
-  font-weight: 650;
+  font-weight: 600;
   text-decoration: none;
   box-shadow: 0 2px 12px #14294622;
 }
@@ -491,7 +517,7 @@ h3 {
   display: block;
   color: #245fbd;
   margin-bottom: 7px;
-  font-weight: 650;
+  font-weight: 600;
 }
 
 .step h3 {
@@ -511,6 +537,7 @@ h3 {
 
 .about p {
   color: var(--muted);
+  font-weight: 300;
   max-width: 440px;
 }
 
@@ -605,7 +632,7 @@ label {
   display: grid;
   gap: 6px;
   font-size: 14px;
-  font-weight: 650;
+  font-weight: 600;
 }
 
 input,
@@ -714,7 +741,7 @@ small.muted {
 
 .stat strong {
   font-size: 32px;
-  font-weight: 650;
+  font-weight: 600;
   line-height: 1;
   color: var(--ink);
   font-variant-numeric: tabular-nums;
@@ -815,7 +842,7 @@ small.muted {
   background: #475569;
   color: #ffffff;
   font-size: 12px;
-  font-weight: 650;
+  font-weight: 600;
   padding: 6px 10px;
   white-space: nowrap;
   width: max-content;
@@ -1427,7 +1454,7 @@ dialog .btn {
 
 .agenda-card .agenda-type {
   font-size: .85rem;
-  font-weight: 650;
+  font-weight: 600;
   color: #245598;
 }
 
@@ -1538,7 +1565,7 @@ dialog .btn {
 button.calendar-day {
   background: var(--sky);
   color: var(--blue);
-  font-weight: 650;
+  font-weight: 600;
 }
 
 button.calendar-day:hover {
@@ -1801,7 +1828,7 @@ button.calendar-day[data-agenda-kind][aria-pressed="true"] {
   background: var(--agenda-color);
   color: var(--agenda-ink);
   font-size: 12px;
-  font-weight: 650;
+  font-weight: 600;
   white-space: nowrap;
 }
 
@@ -1818,7 +1845,7 @@ button.calendar-day[data-agenda-kind][aria-pressed="true"] {
 
 .calendar-color-key caption {
   text-align: left;
-  font-weight: 650;
+  font-weight: 600;
   padding-bottom: 8px;
 }
 
@@ -1963,7 +1990,7 @@ button.calendar-day[data-agenda-kind][aria-pressed="true"] {
     margin-bottom: 4px;
     color: var(--muted);
     font-size: 11px;
-    font-weight: 650;
+    font-weight: 600;
   }
 
   .calendar-agenda .calendar-forum-table td::before {
@@ -2191,7 +2218,7 @@ button.calendar-day[data-agenda-kind][aria-pressed="true"] {
 
 .forum-kicker {
   font-size: 11px;
-  font-weight: 650;
+  font-weight: 600;
   letter-spacing: .06em;
   margin-bottom: 6px;
 }
