@@ -102,6 +102,29 @@ UPDATE users SET role = 'admin' WHERE email = 'email-admin@example.test';
 Admin masuk dengan email. Mahasiswa masuk dengan NIM. Untuk menguji
 aturan produksi dari lokal, ikuti bagian Deploy ke server publik.
 
+### Gambar pendukung untuk laporan contoh
+
+Folder `database/report-images/` berisi enam gambar objek realistis tanpa
+orang, dibuat dengan Imagegen dan berlabel `ILUSTRASI AI`. Prompt tersedia
+di `database/report-images/prompts.json`. Gambar dipilih sesuai kategori
+dan tampil melalui lampiran pada detail laporan.
+
+Untuk mengisi gambar pada laporan contoh di database lokal, buat cadangan
+database, atur variabel koneksi `SUARA_DB_*`, lalu jalankan:
+
+```sh
+php scripts/attach-report-images.php
+php scripts/attach-report-images.php --apply
+```
+
+Perintah pertama hanya menampilkan jumlah laporan yang akan diisi.
+Perintah kedua menyimpan gambar pada laporan yang fotonya masih kosong;
+foto yang sudah ada tetap dipertahankan. Skrip hanya menerima koneksi
+database lokal dan tidak membuat akun atau laporan baru. Gambar kategori
+yang sama dapat dipakai beberapa laporan. Isi database lokal tidak ikut
+tersalin saat repository diunduh; impor skema dan buat laporan terlebih
+dahulu. Gunakan gambar ini untuk data contoh, bukan dokumentasi kejadian.
+
 ## Alur presentasi
 
 1. Sebagai mahasiswa, buat laporan lalu periksa status awalnya di detail.

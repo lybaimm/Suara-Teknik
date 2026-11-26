@@ -1,0 +1,35 @@
+{
+  "description": "AI-generated photorealistic object images, no people. Built-in Imagegen.",
+  "images": [
+    {
+      "key": "facilities",
+      "file": "facilities.png",
+      "prompt": "Use case: photorealistic-natural. Landscape 3:2 image attachment for an Indonesian engineering university student report. Realistic architectural/object photography, natural daylight, physically accurate proportions, true-to-life colors, detailed materials with subtle wear, ordinary believable Indonesian campus, shot on a real camera. ONLY objects and empty spaces: absolutely NO people, faces, hands, silhouettes, human figures, human reflections, portraits, or people in posters/screens. No cartoon, anime, illustration aesthetic, 3D-render look or collage. No commercial or university logos. A tiny discreet corner label reading exactly 'ILUSTRASI AI' identifies this as a generated supporting image. No other readable text. Empty university classroom with ceiling-mounted projector, plain projection screen, wall-mounted Wi-Fi access point, neatly arranged desks, windows, tiled floor and visible real cables. Frame the projector, access point and desks as the main objects."
+    },
+    {
+      "key": "academic",
+      "file": "academic.png",
+      "prompt": "Use case: photorealistic-natural. Landscape 3:2 image attachment for an Indonesian engineering university student report. Realistic architectural/object photography, natural daylight, physically accurate proportions, true-to-life colors, detailed materials with subtle wear, ordinary believable Indonesian campus, shot on a real camera. ONLY objects and empty spaces: absolutely NO people, faces, hands, silhouettes, human figures, human reflections, portraits, or people in posters/screens. No cartoon, anime, illustration aesthetic, 3D-render look or collage. No commercial or university logos. A tiny discreet corner label reading exactly 'ILUSTRASI AI' identifies this as a generated supporting image. No other readable text. Empty university computer and electronics laboratory. Desks with powered-on monitors showing only abstract technical diagrams, keyboards, practical electronics kit, multimeter, notebooks, several shelves of reference books, vacant chairs. Neat but ordinary realistic learning environment."
+    },
+    {
+      "key": "administration",
+      "file": "administration.png",
+      "prompt": "Use case: photorealistic-natural. Landscape 3:2 image attachment for an Indonesian engineering university student report. Realistic architectural/object photography, natural daylight, physically accurate proportions, true-to-life colors, detailed materials with subtle wear, ordinary believable Indonesian campus, shot on a real camera. ONLY objects and empty spaces: absolutely NO people, faces, hands, silhouettes, human figures, human reflections, portraits, or people in posters/screens. No cartoon, anime, illustration aesthetic, 3D-render look or collage. No commercial or university logos. A tiny discreet corner label reading exactly 'ILUSTRASI AI' identifies this as a generated supporting image. No other readable text. Empty university administration service counter. Document trays, blank forms and paper folders without readable writing, desktop computer, queue-number terminal showing only abstract blocks, vacant waiting chairs and potted plant. Focus on the counter and organized documents."
+    },
+    {
+      "key": "organizations",
+      "file": "organizations.png",
+      "prompt": "Use case: photorealistic-natural. Landscape 3:2 image attachment for an Indonesian engineering university student report. Realistic architectural/object photography, natural daylight, physically accurate proportions, true-to-life colors, detailed materials with subtle wear, ordinary believable Indonesian campus, shot on a real camera. ONLY objects and empty spaces: absolutely NO people, faces, hands, silhouettes, human figures, human reflections, portraits, or people in posters/screens. No cartoon, anime, illustration aesthetic, 3D-render look or collage. No commercial or university logos. A tiny discreet corner label reading exactly 'ILUSTRASI AI' identifies this as a generated supporting image. No other readable text. Empty student organization meeting room. Round discussion table, vacant chairs, closed notebooks, proposal folders without text, simple tabletop microphone, pinboard with abstract calendar colored blocks and suggestion box. No posters or photographs of humans."
+    },
+    {
+      "key": "environment",
+      "file": "environment.png",
+      "prompt": "Use case: photorealistic-natural. Landscape 3:2 image attachment for an Indonesian engineering university student report. Realistic architectural/object photography, natural daylight, physically accurate proportions, true-to-life colors, detailed materials with subtle wear, ordinary believable Indonesian campus, shot on a real camera. ONLY objects and empty spaces: absolutely NO people, faces, hands, silhouettes, human figures, human reflections, portraits, or people in posters/screens. No cartoon, anime, illustration aesthetic, 3D-render look or collage. No commercial or university logos. A tiny discreet corner label reading exactly 'ILUSTRASI AI' identifies this as a generated supporting image. No other readable text. Quiet empty university courtyard and canteen entrance, shaded wooden seating, green plants, blue yellow and green waste-sorting bins with simple recycling symbols, drinking water refill station and a reusable bottle. No people anywhere even in the distance."
+    },
+    {
+      "key": "other",
+      "file": "other.png",
+      "prompt": "Use case: photorealistic-natural. Landscape 3:2 image attachment for an Indonesian engineering university student report. Realistic architectural/object photography, natural daylight, physically accurate proportions, true-to-life colors, detailed materials with subtle wear, ordinary believable Indonesian campus, shot on a real camera. ONLY objects and empty spaces: absolutely NO people, faces, hands, silhouettes, human figures, human reflections, portraits, or people in posters/screens. No cartoon, anime, illustration aesthetic, 3D-render look or collage. No commercial or university logos. A tiny discreet corner label reading exactly 'ILUSTRASI AI' identifies this as a generated supporting image. No other readable text. Empty campus common study area with a closed suggestion box, board with blank colorful sticky notes, notebooks and pens on a wooden table, vacant chairs, tropical potted plants and campus corridor in background. Focus on objects for collecting student ideas."
+    }
+  ]
+}
