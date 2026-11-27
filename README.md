@@ -140,6 +140,26 @@ yang sama dapat dipakai beberapa laporan. Isi database lokal tidak ikut
 tersalin saat repository diunduh; impor skema dan buat laporan terlebih
 dahulu. Gunakan gambar ini untuk data contoh, bukan dokumentasi kejadian.
 
+### Memuat 24 laporan dummy untuk latihan lokal
+
+`database/demo-reports.json` berisi 24 laporan simulasi, status, dan rujukan
+ke ilustrasi yang ada di `database/report-images/`. Tiga laporan yang
+disisakan untuk demo (`ST-002`, `ST-003`, dan `ST-005`) tidak termasuk.
+Nomor di JSON membantu mengenali laporan asal. Database tujuan membuat
+nomor laporan baru saat impor.
+
+Impor skema, buat akun mahasiswa khusus latihan, lalu sesuaikan variabel
+`SUARA_DB_*` dengan database lokal. Ganti `NIM_MAHASISWA` dengan NIM akun
+latihan yang sudah ada dan jalankan:
+
+```sh
+php scripts/import-demo-reports.php NIM_MAHASISWA
+php scripts/import-demo-reports.php NIM_MAHASISWA --apply
+```
+
+Perintah pertama hanya menghitung laporan baru. Perintah kedua menambah
+laporan dan lampirannya, serta melewati judul yang sudah ada pada akun itu.
+
 ## Alur presentasi
 
 1. Sebagai mahasiswa, buat laporan lalu periksa status awalnya di detail.
